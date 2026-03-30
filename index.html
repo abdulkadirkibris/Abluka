@@ -2,184 +2,63 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Abluka Oyunu</title>
+<title>Abluka Oyunu - Geliştirilmiş</title>
 <style>
   body {
-    font-family: Arial;
-    text-align: center;
-    background: #222;
+    font-family: Arial, sans-serif;
+    background: #2b2b2b;
     color: white;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+  }
+
+  h1 {
+    margin-top: 20px;
+    font-size: 2em;
+    color: #f0f0f0;
+  }
+
+  #status {
+    margin: 15px;
+    font-size: 18px;
   }
 
   #board {
     display: grid;
-    grid-template-columns: repeat(7, 60px);
-    gap: 5px;
+    grid-template-columns: repeat(7, 70px);
+    gap: 6px;
     justify-content: center;
-    margin-top: 20px;
+    margin-bottom: 30px;
+    perspective: 600px;
   }
 
   .cell {
-    width: 60px;
-    height: 60px;
-    background: #eee;
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(145deg, #deb887, #c79a6b);
+    border-radius: 8px;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.5), inset 1px 1px 3px rgba(255,255,255,0.2);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+
+  .cell:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 12px rgba(0,0,0,0.6), inset 1px 1px 3px rgba(255,255,255,0.3);
   }
 
   .blocked {
-    background: red;
+    background: #d32f2f;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.6), inset 0px 0px 5px rgba(255,255,255,0.1);
   }
 
-  .black {
-    background: black;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-  }
-
-  .white {
-    background: white;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-  }
-
-  #status {
-    margin-top: 20px;
-    font-size: 18px;
-  }
-</style>
-</head>
-<body>
-
-<h1>Abluka Oyunu</h1>
-<div id="status"></div>
-<div id="board"></div>
-
-<script>
-const size = 7;
-let board = [];
-let currentPlayer = "black";
-let phase = "move"; // move -> block
-
-let players = {
-  black: { x: 0, y: 3 },
-  white: { x: 6, y: 3 }
-};
-
-function init() {
-  board = Array(size).fill().map(() => Array(size).fill("empty"));
-  board[0][3] = "black";
-  board[6][3] = "white";
-  render();
-  updateStatus();
-}
-
-function render() {
-  const boardDiv = document.getElementById("board");
-  boardDiv.innerHTML = "";
-
-  for (let i = 0; i < size; i++) {
-    for (let j = 0; j < size; j++) {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-
-      if (board[i][j] === "blocked") cell.classList.add("blocked");
-
-      if (board[i][j] === "black") {
-        const p = document.createElement("div");
-        p.className = "black";
-        cell.appendChild(p);
-      }
-
-      if (board[i][j] === "white") {
-        const p = document.createElement("div");
-        p.className = "white";
-        cell.appendChild(p);
-      }
-
-      cell.onclick = () => handleClick(i, j);
-      boardDiv.appendChild(cell);
-    }
-  }
-}
-
-function handleClick(x, y) {
-  if (phase === "move") movePiece(x, y);
-  else blockCell(x, y);
-}
-
-function movePiece(x, y) {
-  const p = players[currentPlayer];
-
-  if (board[x][y] !== "empty") return;
-
-  if (Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1) {
-    board[p.x][p.y] = "empty";
-    board[x][y] = currentPlayer;
-    players[currentPlayer] = { x, y };
-    phase = "block";
-    render();
-    updateStatus();
-  }
-}
-
-function blockCell(x, y) {
-  if (board[x][y] !== "empty") return;
-
-  board[x][y] = "blocked";
-  phase = "move";
-
-  if (checkWin()) return;
-
-  currentPlayer = currentPlayer === "black" ? "white" : "black";
-  render();
-  updateStatus();
-}
-
-function checkWin() {
-  const opponent = currentPlayer === "black" ? "white" : "black";
-  const p = players[opponent];
-
-  let canMove = false;
-
-  for (let dx = -1; dx <= 1; dx++) {
-    for (let dy = -1; dy <= 1; dy++) {
-      if (dx === 0 && dy === 0) continue;
-
-      let nx = p.x + dx;
-      let ny = p.y + dy;
-
-      if (
-        nx >= 0 && ny >= 0 &&
-        nx < size && ny < size &&
-        board[nx][ny] === "empty"
-      ) {
-        canMove = true;
-      }
-    }
-  }
-
-  if (!canMove) {
-    document.getElementById("status").innerText =
-      currentPlayer + " kazandı!";
-    return true;
-  }
-
-  return false;
-}
-
-function updateStatus() {
-  document.getElementById("status").innerText =
-    (currentPlayer === "black" ? "Siyah" : "Beyaz") +
-    " - " + (phase === "move" ? "Taşını oyna" : "Blok koy");
-}
-
-init();
-</script>
-
-</body>
-</html>
+  .piece {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.7),
