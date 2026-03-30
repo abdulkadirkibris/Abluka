@@ -2,90 +2,129 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Abluka Oyunu - Geliştirilmiş</title>
 <style>
   body {
-    font-family: Arial, sans-serif;
-    background: #2b2b2b;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a1a;
     color: white;
     text-align: center;
     margin: 0;
-    padding: 0;
+    padding: 20px;
   }
 
   h1 {
-    margin-top: 20px;
-    font-size: 2em;
+    margin-top: 10px;
     color: #f0f0f0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
   }
 
   #status {
     margin: 15px;
-    font-size: 18px;
+    font-size: 20px;
+    font-weight: bold;
+    height: 30px;
+    color: #ffd700;
   }
 
   #board {
     display: grid;
-    grid-template-columns: repeat(7, 70px);
-    gap: 6px;
+    grid-template-columns: repeat(7, 60px);
+    gap: 8px;
     justify-content: center;
-    margin-bottom: 30px;
-    perspective: 600px;
+    margin: 20px auto;
+    perspective: 800px;
+  }
+
+  /* Mobil cihazlar için uyumluluk */
+  @media (max-width: 500px) {
+    #board {
+      grid-template-columns: repeat(7, 12vw);
+      gap: 5px;
+    }
+    .cell {
+      width: 12vw !important;
+      height: 12vw !important;
+    }
+    .piece {
+      width: 9vw !important;
+      height: 9vw !important;
+    }
   }
 
   .cell {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
     background: linear-gradient(145deg, #deb887, #c79a6b);
-    border-radius: 8px;
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.5), inset 1px 1px 3px rgba(255,255,255,0.2);
+    border-radius: 10px;
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.4), inset 1px 1px 2px rgba(255,255,255,0.3);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.2s ease;
     position: relative;
   }
 
   .cell:hover {
-    transform: translateY(-2px);
-    box-shadow: 4px 4px 12px rgba(0,0,0,0.6), inset 1px 1px 3px rgba(255,255,255,0.3);
+    transform: scale(1.05);
+    filter: brightness(1.1);
   }
 
   .blocked {
-    background: #d32f2f;
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.6), inset 0px 0px 5px rgba(255,255,255,0.1);
+    background: #444 !important;
+    box-shadow: inset 2px 2px 10px rgba(0,0,0,0.8);
+    cursor: not-allowed;
+  }
+  
+  /* Bloklanan kareye çarpı efekti */
+  .blocked::after {
+    content: "✕";
+    color: #ff4444;
+    font-size: 24px;
+    opacity: 0.5;
   }
 
   .piece {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    box-shadow: 1px 1px 4px rgba(0,0,0,0.7), inset 1px 1px 2px rgba(255,255,255,0.2);
-    transition: transform 0.3s, box-shadow 0.3s;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%; /* Daha dairesel ve şık görünüm */
+    box-shadow: 2px 4px 6px rgba(0,0,0,0.5);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 2;
   }
 
-  .black {
-    background-color: black;
-  }
-
-  .white {
-    background-color: white;
-    border: 1px solid #ccc;
-  }
+  .black { background: radial-gradient(circle at 30% 30%, #444, #000); }
+  .white { background: radial-gradient(circle at 30% 30%, #fff, #ccc); border: 1px solid #999; }
 
   .glow {
-    box-shadow: 0 0 15px 5px yellow, 1px 1px 4px rgba(0,0,0,0.7), inset 1px 1px 2px rgba(255,255,255,0.2);
+    box-shadow: 0 0 20px 5px rgba(255, 215, 0, 0.7);
     transform: scale(1.1);
   }
+
+  .btn-reset {
+    background: #e67e22;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s;
+  }
+
+  .btn-reset:hover { background: #d35400; }
 
 </style>
 </head>
 <body>
 
 <h1>Abluka Oyunu</h1>
-<div id="status"></div>
+<div id="status">Yükleniyor...</div>
 <div id="board"></div>
+<button class="btn-reset" onclick="init()">Yeniden Başlat</button>
 
 <script>
 const size = 7;
@@ -99,9 +138,17 @@ let players = {
 };
 
 function init() {
+  // Değişkenleri sıfırla
   board = Array(size).fill().map(() => Array(size).fill("empty"));
-  board[0][3] = "black";
-  board[6][3] = "white";
+  currentPlayer = "black";
+  phase = "move";
+  players.black = { x: 0, y: 3 };
+  players.white = { x: 6, y: 3 };
+  
+  // Tahtayı kur
+  board[players.black.x][players.black.y] = "black";
+  board[players.white.x][players.white.y] = "white";
+  
   render();
   updateStatus();
 }
@@ -115,19 +162,26 @@ function render() {
       const cell = document.createElement("div");
       cell.className = "cell";
 
-      if (board[i][j] === "blocked") cell.classList.add("blocked");
+      const pCurrent = players[currentPlayer];
+      const isNearby = Math.abs(pCurrent.x - i) <= 1 && Math.abs(pCurrent.y - j) <= 1;
 
+      // Bloklu hücre kontrolü
+      if (board[i][j] === "blocked") {
+        cell.classList.add("blocked");
+      }
+
+      // Oyuncu taşlarını çiz
       if (board[i][j] === "black" || board[i][j] === "white") {
         const p = document.createElement("div");
         p.className = `piece ${board[i][j]}`;
+        // Sırası gelen oyuncunun taşını parlat
         if (board[i][j] === currentPlayer) p.classList.add("glow");
         cell.appendChild(p);
-        if (board[i][j] === "empty" && phase === "move") {
-    const pCurrent = players[currentPlayer];
-    if (Math.abs(pCurrent.x - i) <= 1 && Math.abs(pCurrent.y - j) <= 1) {
-        cell.style.boxShadow = "inset 0 0 10px gold"; // Gidilebilir kareleri vurgula
-    }
-}
+      } 
+      // Gidilebilir kareleri vurgula (Hata düzeltildi!)
+      else if (phase === "move" && isNearby && board[i][j] === "empty") {
+        cell.style.boxShadow = "inset 0 0 15px gold";
+        cell.style.background = "linear-gradient(145deg, #f1c40f, #c79a6b)";
       }
 
       cell.onclick = () => handleClick(i, j);
@@ -146,6 +200,7 @@ function movePiece(x, y) {
 
   if (board[x][y] !== "empty") return;
 
+  // Çevresindeki 8 kare kontrolü
   if (Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1) {
     board[p.x][p.y] = "empty";
     board[x][y] = currentPlayer;
@@ -160,17 +215,17 @@ function blockCell(x, y) {
   if (board[x][y] !== "empty") return;
 
   board[x][y] = "blocked";
-  phase = "move";
-
+  
   if (checkWin()) return;
 
-  currentPlayer = currentPlayer === "black" ? "white" : "black";
+  phase = "move";
+  currentPlayer = (currentPlayer === "black") ? "white" : "black";
   render();
   updateStatus();
 }
 
 function checkWin() {
-  const opponent = currentPlayer === "black" ? "white" : "black";
+  const opponent = (currentPlayer === "black") ? "white" : "black";
   const p = players[opponent];
 
   let canMove = false;
@@ -193,8 +248,10 @@ function checkWin() {
   }
 
   if (!canMove) {
-    document.getElementById("status").innerText =
-      (currentPlayer === "black" ? "Siyah" : "Beyaz") + " kazandı!";
+    document.getElementById("status").innerText = 
+      "OYUN BİTTİ! " + (currentPlayer === "black" ? "Siyah" : "Beyaz") + " kazandı!";
+    document.getElementById("status").style.color = "#2ecc71";
+    // Tıklamaları durdurmak için board render'ı etkisiz bırakılabilir
     return true;
   }
 
@@ -202,11 +259,12 @@ function checkWin() {
 }
 
 function updateStatus() {
-  document.getElementById("status").innerText =
-    (currentPlayer === "black" ? "Siyah" : "Beyaz") +
-    " - " + (phase === "move" ? "Taşını oyna" : "Blok koy");
+  const turnText = (currentPlayer === "black" ? "Siyah" : "Beyaz");
+  const actionText = (phase === "move" ? "Taşını Oynat" : "Blok Koy!");
+  document.getElementById("status").innerText = `${turnText} Oyuncusu - ${actionText}`;
 }
 
+// Oyunu başlat
 init();
 </script>
 
