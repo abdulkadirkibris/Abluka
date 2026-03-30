@@ -37,7 +37,6 @@
     perspective: 600px;
   }
 
-  /* Mobil Uyumluluk */
   @media (max-width: 500px) {
     #board {
       grid-template-columns: repeat(7, 12vw);
@@ -72,7 +71,6 @@
     box-shadow: 4px 4px 12px rgba(0,0,0,0.6);
   }
 
-  /* İstediğin Kırmızı Blok Rengi */
   .blocked {
     background: #d32f2f !important;
     box-shadow: 2px 2px 8px rgba(0,0,0,0.6), inset 0px 0px 5px rgba(255,255,255,0.2);
@@ -124,6 +122,7 @@ const size = 7;
 let board = [];
 let currentPlayer = "black";
 let phase = "move"; 
+let gameOver = false;
 
 let players = {
   black: { x: 0, y: 3 },
@@ -134,6 +133,7 @@ function init() {
   board = Array(size).fill().map(() => Array(size).fill("empty"));
   currentPlayer = "black";
   phase = "move";
+  gameOver = false;
   
   players.black = { x: 0, y: 3 };
   players.white = { x: 6, y: 3 };
@@ -164,11 +164,12 @@ function render() {
       if (board[i][j] === "black" || board[i][j] === "white") {
         const p = document.createElement("div");
         p.className = `piece ${board[i][j]}`;
-        if (board[i][j] === currentPlayer) p.classList.add("glow");
+        // Sadece oyun devam ediyorsa parlat
+        if (!gameOver && board[i][j] === currentPlayer) p.classList.add("glow");
         cell.appendChild(p);
       } 
-      // Hareket edilebilir yerlerin vurgulanması
-      else if (phase === "move" && isNearby && board[i][j] === "empty") {
+      // Sadece oyun devam ediyorsa gidilecek yerleri göster
+      else if (!gameOver && phase === "move" && isNearby && board[i][j] === "empty") {
         cell.style.boxShadow = "inset 0 0 15px gold, 0 0 10px gold";
         cell.style.border = "1px solid gold";
       }
@@ -180,13 +181,13 @@ function render() {
 }
 
 function handleClick(x, y) {
+  if (gameOver) return; // Oyun bittiyse tıklamayı engelle
   if (phase === "move") movePiece(x, y);
   else blockCell(x, y);
 }
 
 function movePiece(x, y) {
   const p = players[currentPlayer];
-
   if (board[x][y] !== "empty") return;
 
   if (Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1) {
@@ -204,7 +205,14 @@ function blockCell(x, y) {
 
   board[x][y] = "blocked";
   
-  if (checkWin()) return;
+  // Önce tahtayı çiz ki son blok kırmızı görünsün
+  render();
+
+  if (checkWin()) {
+    gameOver = true;
+    render(); // Glow efektlerini kaldırmak için tekrar çiz
+    return;
+  }
 
   phase = "move";
   currentPlayer = (currentPlayer === "black") ? "white" : "black";
