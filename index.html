@@ -61,4 +61,148 @@
     width: 50px;
     height: 50px;
     border-radius: 8px;
-    box-shadow: 1px 1px 4px rgba(0,0,0,0.7),
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.7), inset 1px 1px 2px rgba(255,255,255,0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .black {
+    background-color: black;
+  }
+
+  .white {
+    background-color: white;
+    border: 1px solid #ccc;
+  }
+
+  .glow {
+    box-shadow: 0 0 15px 5px yellow, 1px 1px 4px rgba(0,0,0,0.7), inset 1px 1px 2px rgba(255,255,255,0.2);
+    transform: scale(1.1);
+  }
+
+</style>
+</head>
+<body>
+
+<h1>Abluka Oyunu</h1>
+<div id="status"></div>
+<div id="board"></div>
+
+<script>
+const size = 7;
+let board = [];
+let currentPlayer = "black";
+let phase = "move"; // move -> block
+
+let players = {
+  black: { x: 0, y: 3 },
+  white: { x: 6, y: 3 }
+};
+
+function init() {
+  board = Array(size).fill().map(() => Array(size).fill("empty"));
+  board[0][3] = "black";
+  board[6][3] = "white";
+  render();
+  updateStatus();
+}
+
+function render() {
+  const boardDiv = document.getElementById("board");
+  boardDiv.innerHTML = "";
+
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+
+      if (board[i][j] === "blocked") cell.classList.add("blocked");
+
+      if (board[i][j] === "black" || board[i][j] === "white") {
+        const p = document.createElement("div");
+        p.className = `piece ${board[i][j]}`;
+        if (board[i][j] === currentPlayer) p.classList.add("glow");
+        cell.appendChild(p);
+      }
+
+      cell.onclick = () => handleClick(i, j);
+      boardDiv.appendChild(cell);
+    }
+  }
+}
+
+function handleClick(x, y) {
+  if (phase === "move") movePiece(x, y);
+  else blockCell(x, y);
+}
+
+function movePiece(x, y) {
+  const p = players[currentPlayer];
+
+  if (board[x][y] !== "empty") return;
+
+  if (Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1) {
+    board[p.x][p.y] = "empty";
+    board[x][y] = currentPlayer;
+    players[currentPlayer] = { x, y };
+    phase = "block";
+    render();
+    updateStatus();
+  }
+}
+
+function blockCell(x, y) {
+  if (board[x][y] !== "empty") return;
+
+  board[x][y] = "blocked";
+  phase = "move";
+
+  if (checkWin()) return;
+
+  currentPlayer = currentPlayer === "black" ? "white" : "black";
+  render();
+  updateStatus();
+}
+
+function checkWin() {
+  const opponent = currentPlayer === "black" ? "white" : "black";
+  const p = players[opponent];
+
+  let canMove = false;
+
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      if (dx === 0 && dy === 0) continue;
+
+      let nx = p.x + dx;
+      let ny = p.y + dy;
+
+      if (
+        nx >= 0 && ny >= 0 &&
+        nx < size && ny < size &&
+        board[nx][ny] === "empty"
+      ) {
+        canMove = true;
+      }
+    }
+  }
+
+  if (!canMove) {
+    document.getElementById("status").innerText =
+      (currentPlayer === "black" ? "Siyah" : "Beyaz") + " kazandı!";
+    return true;
+  }
+
+  return false;
+}
+
+function updateStatus() {
+  document.getElementById("status").innerText =
+    (currentPlayer === "black" ? "Siyah" : "Beyaz") +
+    " - " + (phase === "move" ? "Taşını oyna" : "Blok koy");
+}
+
+init();
+</script>
+
+</body>
+</html>
