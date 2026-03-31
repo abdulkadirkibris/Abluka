@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Abluka Oyunu - Koordinatlı</title>
+<title>Abluka Oyunu - Fix</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -16,46 +16,49 @@
     align-items: flex-start; gap: 20px; flex-wrap: wrap; margin-top: 10px;
   }
 
-  /* Koordinat Çerçevesi */
-  .board-wrapper {
+  /* Ana Tahta Çerçevesi */
+  .board-outer {
+    background: #3d3d3d;
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    width: 100%;
+    max-width: 480px;
+  }
+
+  /* Koordinat Izgarası: 8x8 (7 hücre + 1 etiket alanı) */
+  .grid-container {
     display: grid;
-    grid-template-areas: 
-      ". col col col col col col col ."
-      "row board board board board board board board row"
-      ". col col col col col col col .";
-    grid-template-columns: 25px repeat(7, 1fr) 25px;
-    background: #333; padding: 5px; border-radius: 10px;
-    width: 100%; max-width: 500px;
+    grid-template-columns: 25px repeat(7, 1fr);
+    grid-template-rows: repeat(7, 1fr) 25px;
+    width: 100%;
+  }
+
+  /* Sayı Etiketleri (Sol) */
+  .row-label {
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; color: #aaa; font-size: 14px;
+  }
+
+  /* Harf Etiketleri (Alt) */
+  .col-label {
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; color: #aaa; font-size: 14px; padding-top: 5px;
   }
 
   #board {
-    grid-area: board;
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
-    background: #444; padding: 5px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    grid-column: 2 / 9; /* 2. kolondan başla, sona kadar git */
+    grid-row: 1 / 8;    /* 1. satırdan başla, etiket satırına kadar git */
   }
-
-  /* Harf ve Sayı Etiketleri */
-  .col-label { color: #aaa; font-weight: bold; font-size: 14px; padding: 5px 0; }
-  .row-label { color: #aaa; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-
-  .notation-panel {
-    width: 250px; height: 480px; background: #1a1a1a; border-radius: 10px;
-    padding: 15px; display: flex; flex-direction: column; text-align: left;
-    border: 1px solid #444;
-  }
-
-  #notationList {
-    flex-grow: 1; overflow-y: auto; font-family: 'Courier New', monospace;
-    font-size: 13px; color: #aaa; list-style: none; padding: 0; margin-top: 10px;
-  }
-
-  .notation-item { padding: 6px 0; border-bottom: 1px solid #333; color: #eee; }
 
   .cell {
     aspect-ratio: 1 / 1;
     background: linear-gradient(145deg, #deb887, #c79a6b);
     border-radius: 4px; cursor: pointer; display: flex;
-    align-items: center; justify-content: center; transition: 0.2s;
+    align-items: center; justify-content: center; position: relative;
   }
 
   .blocked { background: #d32f2f !important; border: none !important; }
@@ -64,16 +67,28 @@
   .white { background: #fff; border: 1px solid #ccc; }
   .glow { box-shadow: 0 0 12px 4px yellow; transform: scale(1.05); }
 
-  .controls { margin-top: 15px; display: flex; gap: 10px; justify-content: center; }
-  .btn { border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+  .notation-panel {
+    width: 250px; height: 450px; background: #1a1a1a; border-radius: 10px;
+    padding: 15px; display: flex; flex-direction: column; text-align: left;
+    border: 1px solid #444;
+  }
+
+  #notationList {
+    flex-grow: 1; overflow-y: auto; font-family: monospace;
+    font-size: 13px; color: #aaa; list-style: none; padding: 0; margin-top: 10px;
+  }
+
+  .notation-item { padding: 6px 0; border-bottom: 1px solid #333; color: #eee; }
+
+  .controls { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
+  .btn { border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
   .btn-undo { background: #3498db; color: white; }
   .btn-reset { background: #e67e22; color: white; }
 
   @media (max-width: 600px) {
     .game-container { flex-direction: column; align-items: center; }
-    .notation-panel { width: 100%; max-width: 500px; height: 180px; }
-    .board-wrapper { grid-template-columns: 20px repeat(7, 1fr) 20px; }
-    .col-label, .row-label { font-size: 11px; }
+    .notation-panel { width: 100%; max-width: 480px; height: 160px; }
+    .row-label, .col-label { font-size: 11px; }
   }
 </style>
 </head>
@@ -83,19 +98,20 @@
 <div id="status" style="margin-bottom: 10px; color: #ffd700; font-size: 1.1em; height: 25px;">Yükleniyor...</div>
 
 <div class="game-container">
-  <div class="board-wrapper" id="boardWrapper">
-    <div></div> <div class="col-label">A</div><div class="col-label">B</div><div class="col-label">C</div>
-    <div class="col-label">D</div><div class="col-label">E</div><div class="col-label">F</div><div class="col-label">G</div>
-    <div></div>
+  <div class="board-outer">
+    <div class="grid-container">
+      <div class="row-label">7</div>
+      <div id="board"></div> <div class="row-label">6</div>
+      <div class="row-label">5</div>
+      <div class="row-label">4</div>
+      <div class="row-label">3</div>
+      <div class="row-label">2</div>
+      <div class="row-label">1</div>
 
-    <div id="leftLabels" style="display:contents"></div>
-    <div id="board"></div>
-    <div id="rightLabels" style="display:contents"></div>
-
-    <div></div>
-    <div class="col-label">A</div><div class="col-label">B</div><div class="col-label">C</div>
-    <div class="col-label">D</div><div class="col-label">E</div><div class="col-label">F</div><div class="col-label">G</div>
-    <div></div>
+      <div></div>
+      <div class="col-label">A</div><div class="col-label">B</div><div class="col-label">C</div>
+      <div class="col-label">D</div><div class="col-label">E</div><div class="col-label">F</div><div class="col-label">G</div>
+    </div>
   </div>
   
   <div class="notation-panel">
@@ -137,42 +153,21 @@ function init() {
   players.black = { x: 0, y: 3 }; players.white = { x: 6, y: 3 };
   board[0][3] = "black"; board[6][3] = "white";
   document.getElementById("notationList").innerHTML = "";
-  
-  setupLabels();
   render();
   updateStatus();
-}
-
-function setupLabels() {
-  const left = document.getElementById("leftLabels");
-  const right = document.getElementById("rightLabels");
-  left.innerHTML = ""; right.innerHTML = "";
-  
-  for (let i = 0; i < size; i++) {
-    const lLabel = document.createElement("div");
-    lLabel.className = "row-label";
-    lLabel.innerText = size - i;
-    left.appendChild(lLabel);
-  }
 }
 
 function render() {
   const boardDiv = document.getElementById("board");
   boardDiv.innerHTML = "";
-  
-  // Sağ etiketleri i döngüsü içinde board render edilirken grid akışına uygun ekleyeceğiz 
-  // (Ancak basitlik için grid-area kullandığımızdan sadece board içini doldurmak yeterli)
-  
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
       const cell = document.createElement("div");
       cell.className = "cell";
-      
       const pCur = players[currentPlayer];
       const isNearby = Math.abs(pCur.x - i) <= 1 && Math.abs(pCur.y - j) <= 1;
 
       if (board[i][j] === "blocked") cell.classList.add("blocked");
-      
       if (board[i][j] === "black" || board[i][j] === "white") {
         const p = document.createElement("div");
         p.className = `piece ${board[i][j]}`;
@@ -183,7 +178,6 @@ function render() {
         cell.style.boxShadow = "inset 0 0 12px rgba(255,215,0,0.9)";
         cell.style.border = "1px solid gold";
       }
-
       cell.onclick = () => handleClick(i, j);
       boardDiv.appendChild(cell);
     }
@@ -201,16 +195,12 @@ function movePiece(x, y) {
   if (board[x][y] !== "empty") return;
   if (Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1) {
     saveState();
-    const from = getCoord(p.x, p.y);
-    const to = getCoord(x, y);
-    board[p.x][p.y] = "empty";
-    board[x][y] = currentPlayer;
+    const from = getCoord(p.x, p.y), to = getCoord(x, y);
+    board[p.x][p.y] = "empty"; board[x][y] = currentPlayer;
     players[currentPlayer] = { x, y };
     currentMoveNotation = `${currentPlayer === 'black' ? 'Siyah' : 'Beyaz'}: ${from}→${to}`;
     updateNotationUI(currentMoveNotation, true);
-    phase = "block";
-    render();
-    updateStatus();
+    phase = "block"; render(); updateStatus();
   }
 }
 
@@ -222,10 +212,8 @@ function blockCell(x, y) {
   updateNotationUI(currentMoveNotation, false);
   render();
   if (checkWin()) { gameOver = true; render(); return; }
-  phase = "move";
-  currentPlayer = (currentPlayer === "black") ? "white" : "black";
-  render();
-  updateStatus();
+  phase = "move"; currentPlayer = (currentPlayer === "black") ? "white" : "black";
+  render(); updateStatus();
 }
 
 function saveState() {
@@ -241,8 +229,7 @@ function undo() {
   board = prevState.board; currentPlayer = prevState.currentPlayer;
   phase = prevState.phase; players = prevState.players; gameOver = prevState.gameOver;
   currentMoveNotation = prevState.currentMoveNotation;
-  render();
-  updateStatus();
+  render(); updateStatus();
 }
 
 function checkWin() {
