@@ -3,172 +3,191 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Abluka - Ultra AI Edition</title>
+<title>Abluka Oyunu - Logo Edition</title>
 <style>
   * { box-sizing: border-box; }
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: #121212; color: #e0e0e0; text-align: center; margin: 0; padding: 10px;
-    display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+    background: #2b2b2b; color: white; text-align: center; margin: 0; padding: 10px;
   }
 
-  /* --- MENÜ --- */
-  #mainMenu, #setupMenu {
-    background: #1e1e1e; padding: 30px; border-radius: 20px;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.9); width: 95%; max-width: 400px; margin-top: 30px;
-    border: 1px solid #333;
+  /* Başlık ve Logo Konteynırı - Eşit Boyut Ayarı */
+  .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 10px 0 15px 0;
   }
-  .menu-logo { height: 80px; margin-bottom: 15px; filter: drop-shadow(0 0 10px #3498db); }
-  .menu-btn {
-    display: block; width: 100%; padding: 18px; margin: 12px 0;
-    border: none; border-radius: 10px; font-size: 18px; font-weight: bold;
-    cursor: pointer; transition: 0.3s; color: white;
+
+  .game-logo {
+    height: 40px; /* Başlık font boyutuyla uyumlu yükseklik */
+    width: auto;
+    display: block;
+    object-fit: contain;
   }
-  .btn-primary { background: #2980b9; }
-  .btn-ai { background: #c0392b; border: 1px solid #e74c3c; }
-  .btn-start { background: #27ae60; margin-top: 20px; }
-  .menu-btn:hover { transform: scale(1.03); filter: brightness(1.2); }
 
-  /* --- OYUN ALANI --- */
-  #gameArea { display: none; width: 100%; flex-direction: column; align-items: center; }
-  .header-container { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 5px 0 10px 0; }
-  .game-logo { height: 35px; width: auto; }
-  h1 { margin: 0; font-size: 28px; color: #e74c3c; letter-spacing: 2px; }
+  h1 { 
+    margin: 0; 
+    font-size: 32px; /* Logo yüksekliği ile görsel denge sağlar */
+    line-height: 40px; /* Logo yüksekliği ile aynı tutuldu */
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
 
+  /* Oyun Alanı Tasarımı */
   .game-container {
     display: flex; flex-direction: row; justify-content: center;
-    align-items: flex-start; gap: 15px; flex-wrap: wrap; width: 100%;
+    align-items: flex-start; gap: 20px; flex-wrap: wrap;
   }
 
   .board-outer {
-    background: #222; padding: 10px; border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.7); width: 100%; max-width: 480px;
-    border: 2px solid #444;
+    background: #3d3d3d; padding: 10px; border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 480px;
   }
+
   .grid-container {
     display: grid; grid-template-columns: 25px repeat(7, 1fr);
     grid-template-rows: repeat(7, 1fr) 25px; width: 100%;
   }
-  .row-label, .col-label { display: flex; align-items: center; justify-content: center; font-weight: bold; color: #666; font-size: 13px; }
-  
-  #board { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; grid-column: 2 / 9; grid-row: 1 / 8; }
-  .cell { aspect-ratio: 1 / 1; background: #3d3d3d; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-  .blocked { background: #7f0000 !important; box-shadow: inset 0 0 15px rgba(0,0,0,0.6); }
-  .piece { width: 85%; height: 85%; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8); }
-  .black { background: radial-gradient(circle at 30% 30%, #444, #000); }
-  .white { background: radial-gradient(circle at 30% 30%, #fff, #bbb); border: 1px solid #999; }
-  .glow { box-shadow: 0 0 15px 5px rgba(231, 76, 60, 0.7); animation: pulse 1.5s infinite; }
 
-  @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+  .row-label { display: flex; align-items: center; justify-content: center; font-weight: bold; color: #aaa; font-size: 14px; }
+  .col-label { display: flex; align-items: center; justify-content: center; font-weight: bold; color: #aaa; font-size: 14px; padding-top: 5px; }
+
+  #board {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    grid-column: 2 / 9; grid-row: 1 / 8;
+  }
+
+  .cell {
+    aspect-ratio: 1 / 1; background: linear-gradient(145deg, #deb887, #c79a6b);
+    border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: 0.2s;
+  }
+
+  .blocked { background: #d32f2f !important; border: none !important; }
+  .piece { width: 80%; height: 80%; border-radius: 6px; box-shadow: 1px 2px 4px black; }
+  .black { background: #000; }
+  .white { background: #fff; border: 1px solid #ccc; }
+  .glow { box-shadow: 0 0 12px 4px yellow; transform: scale(1.05); }
 
   .notation-panel {
-    width: 280px; height: 430px; background: #000; border-radius: 12px;
-    padding: 15px; display: flex; flex-direction: column; text-align: left; border: 1px solid #333;
+    width: 250px; height: 450px; background: #1a1a1a; border-radius: 10px;
+    padding: 15px; display: flex; flex-direction: column; text-align: left; border: 1px solid #444;
   }
-  #notationList { flex-grow: 1; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; color: #e74c3c; list-style: none; padding: 0; }
-  .notation-item { padding: 4px 0; border-bottom: 1px solid #1a1a1a; }
 
-  .controls { margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; width: 100%; max-width: 480px; }
-  .btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; flex: 1; min-width: 80px; transition: 0.2s; }
-  .btn-undo { background: #2980b9; }
-  .btn-reset { background: #f39c12; }
-  .btn-download { background: #27ae60; }
-  .btn-exit { background: #c0392b; }
+  #notationList {
+    flex-grow: 1; overflow-y: auto; font-family: monospace;
+    font-size: 13px; color: #aaa; list-style: none; padding: 0; margin-top: 10px;
+  }
+
+  .notation-item { padding: 6px 0; border-bottom: 1px solid #333; color: #eee; }
+
+  .controls { margin-top: 20px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  
+  .btn { border: none; padding: 12px 18px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 14px; }
+  .btn-undo { background: #3498db; color: white; }
+  .btn-reset { background: #e67e22; color: white; }
+  .btn-download { background: #2ecc71; color: white; }
 
   @media (max-width: 600px) {
-    .board-outer { max-width: 98vw; }
-    .notation-panel { width: 98vw; height: 110px; }
-    h1 { font-size: 22px; }
+    .header-container { gap: 10px; }
+    .game-logo { height: 28px; }
+    h1 { font-size: 24px; line-height: 28px; }
+    .game-container { flex-direction: column; align-items: center; }
+    .notation-panel { width: 100%; max-width: 480px; height: 160px; }
   }
 </style>
 </head>
 <body>
 
-<div id="mainMenu">
-  <img src="logo.png" alt="Abluka" class="menu-logo">
-  <h2 style="margin:0 0 20px 0; letter-spacing: 4px; color:#e74c3c;">ABLUKA: ULTRA AI</h2>
-  <button class="menu-btn btn-primary" onclick="showSetup(false)">2 KİŞİLİK</button>
-  <button class="menu-btn btn-ai" onclick="showSetup(true)">YAPAY ZEKA (ZOR)</button>
+<div class="header-container">
+  <img src="logo.png" alt="Abluka Logo" class="game-logo">
+  <h1>Abluka Oyunu</h1>
 </div>
 
-<div id="setupMenu" style="display: none;">
-  <h3>Tarafını Seç</h3>
-  <div style="text-align:left; margin:15px 0;">
-    <label>Rengin:</label>
-    <select id="playerColor" style="width:100%; padding:14px; background:#111; color:white; border:1px solid #444; border-radius:8px;">
-      <option value="black">Siyah (Hücum)</option>
-      <option value="white">Beyaz (Savunma)</option>
-    </select>
+<div id="status" style="margin-bottom: 10px; color: #ffd700; font-size: 1.1em; height: 25px;">Yükleniyor...</div>
+
+<div class="game-container">
+  <div class="board-outer">
+    <div class="grid-container">
+      <div class="row-label">7</div>
+      <div id="board"></div>
+      <div class="row-label">6</div>
+      <div class="row-label">5</div>
+      <div class="row-label">4</div>
+      <div class="row-label">3</div>
+      <div class="row-label">2</div>
+      <div class="row-label">1</div>
+      <div></div>
+      <div class="col-label">A</div><div class="col-label">B</div><div class="col-label">C</div>
+      <div class="col-label">D</div><div class="col-label">E</div><div class="col-label">F</div><div class="col-label">G</div>
+    </div>
   </div>
-  <p style="font-size: 12px; color: #888;">Not: Yapay zeka en üst düzey strateji modundadır.</p>
-  <button class="menu-btn btn-start" onclick="startGame()">BAŞLAT</button>
-  <button class="menu-btn" style="background:#333" onclick="backToMain()">İPTAL</button>
+  
+  <div class="notation-panel">
+    <strong><small>HAMLE KAYDI</small></strong>
+    <ul id="notationList"></ul>
+  </div>
 </div>
 
-<div id="gameArea">
-  <div class="header-container">
-    <img src="logo.png" alt="Logo" class="game-logo">
-    <h1>ABLUKA</h1>
-  </div>
-  <div id="status" style="margin-bottom: 10px; font-weight: bold; color: #e74c3c;"></div>
-  <div class="game-container">
-    <div class="board-outer">
-      <div class="grid-container">
-        <div class="row-label">7</div><div id="board"></div>
-        <div class="row-label">6</div><div class="row-label">5</div><div class="row-label">4</div><div class="row-label">3</div><div class="row-label">2</div><div class="row-label">1</div>
-        <div></div><div class="col-label">A</div><div class="col-label">B</div><div class="col-label">C</div><div class="col-label">D</div><div class="col-label">E</div><div class="col-label">F</div><div class="col-label">G</div>
-      </div>
-    </div>
-    <div class="notation-panel">
-      <strong><small>LOGS</small></strong>
-      <ul id="notationList"></ul>
-    </div>
-  </div>
-  <div class="controls">
-    <button class="btn btn-undo" onclick="undo()">GERİ AL</button>
-    <button class="btn btn-reset" onclick="initGame()">RESET</button>
-    <button class="btn btn-download" onclick="downloadNotation()">KAYDET</button>
-    <button class="btn btn-exit" onclick="backToMain()">ÇIKIŞ</button>
-  </div>
+<div class="controls">
+  <button class="btn btn-reset" onclick="init()">Sıfırla</button>
+  <button id="undoBtn" class="btn btn-undo" onclick="undo()">Geri Al</button>
+  <button id="downloadBtn" class="btn btn-download" onclick="downloadNotation()">Notasyonu İndir (.txt)</button>
 </div>
 
 <script>
-// --- CORE ---
+// JavaScript fonksiyonları aynı kalmıştır
 const size = 7;
 const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 let board = [], currentPlayer = "black", phase = "move", gameOver = false, history = [];
 let players = { black: { x: 0, y: 3 }, white: { x: 6, y: 3 } };
-let isVsAI = false, userColor = "black", aiTimeout = null;
+let currentMoveNotation = "";
 
-function showSetup(vsAI) {
-  isVsAI = vsAI;
-  document.getElementById("mainMenu").style.display = "none";
-  document.getElementById("setupMenu").style.display = "block";
+function getCoord(x, y) { return cols[y] + (size - x); }
+
+function updateNotationUI(text, isNewMove) {
+  const list = document.getElementById("notationList");
+  if (!list) return;
+  if (isNewMove) {
+    const li = document.createElement("li");
+    li.className = "notation-item";
+    li.innerText = text;
+    list.prepend(li);
+  } else if (list.firstChild) {
+    list.firstChild.innerText = text;
+  }
 }
 
-function backToMain() {
-  clearTimeout(aiTimeout);
-  document.getElementById("gameArea").style.display = "none";
-  document.getElementById("setupMenu").style.display = "none";
-  document.getElementById("mainMenu").style.display = "block";
+function downloadNotation() {
+  const listItems = document.querySelectorAll(".notation-item");
+  if (listItems.length === 0) {
+    alert("Henüz kaydedilmiş bir hamle yok!");
+    return;
+  }
+  let textContent = "--- ABLUKA OYUNU HAMLE KAYDI ---\n\n";
+  const logs = Array.from(listItems).reverse();
+  logs.forEach((item, index) => {
+    textContent += `${index + 1}. ${item.innerText}\n`;
+  });
+  if (gameOver) textContent += `\nSONUÇ: ${document.getElementById("status").innerText}`;
+  const blob = new Blob([textContent], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "abluka_notasyon.txt";
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
-function startGame() {
-  userColor = document.getElementById("playerColor").value;
-  document.getElementById("setupMenu").style.display = "none";
-  document.getElementById("gameArea").style.display = "flex";
-  initGame();
-}
-
-function initGame() {
-  clearTimeout(aiTimeout);
+function init() {
   board = Array(size).fill().map(() => Array(size).fill("empty"));
   currentPlayer = "black"; phase = "move"; gameOver = false; history = [];
   players.black = { x: 0, y: 3 }; players.white = { x: 6, y: 3 };
   board[0][3] = "black"; board[6][3] = "white";
   document.getElementById("notationList").innerHTML = "";
+  document.getElementById("status").style.color = "#ffd700";
   render(); updateStatus();
-  if(isVsAI && currentPlayer !== userColor) aiTimeout = setTimeout(runAI, 600);
 }
 
 function render() {
@@ -178,19 +197,20 @@ function render() {
     for (let j = 0; j < size; j++) {
       const cell = document.createElement("div");
       cell.className = "cell";
+      const pCur = players[currentPlayer];
+      const isNearby = Math.abs(pCur.x - i) <= 1 && Math.abs(pCur.y - j) <= 1;
       if (board[i][j] === "blocked") cell.classList.add("blocked");
       if (board[i][j] === "black" || board[i][j] === "white") {
         const p = document.createElement("div");
         p.className = `piece ${board[i][j]}`;
         if (!gameOver && board[i][j] === currentPlayer) p.classList.add("glow");
         cell.appendChild(p);
-      } else if (!gameOver && phase === "move" && (currentPlayer === userColor || !isVsAI)) {
-        const pCur = players[currentPlayer];
-        if (Math.abs(pCur.x - i) <= 1 && Math.abs(pCur.y - j) <= 1 && board[i][j] === "empty") {
-          cell.style.background = "#2d4a3e";
-        }
+      } 
+      else if (!gameOver && phase === "move" && isNearby && board[i][j] === "empty") {
+        cell.style.boxShadow = "inset 0 0 12px rgba(255,215,0,0.9)";
+        cell.style.border = "1px solid gold";
       }
-      cell.onclick = () => { if(!(isVsAI && currentPlayer !== userColor)) handleClick(i, j); };
+      cell.onclick = () => handleClick(i, j);
       boardDiv.appendChild(cell);
     }
   }
@@ -204,134 +224,68 @@ function handleClick(x, y) {
 
 function movePiece(x, y) {
   const p = players[currentPlayer];
-  if (board[x][y] !== "empty" || Math.abs(p.x - x) > 1 || Math.abs(p.y - y) > 1) return;
-  saveState();
-  board[p.x][p.y] = "empty"; board[x][y] = currentPlayer;
-  let notation = `${currentPlayer==='black'?'S':'B'}: ${getCoord(p.x, p.y)}→${getCoord(x, y)}`;
-  players[currentPlayer] = { x, y };
-  updateNotationUI(notation, true);
-  phase = "block"; render(); updateStatus();
-  if(isVsAI && currentPlayer !== userColor) aiTimeout = setTimeout(runAI, 600);
+  if (board[x][y] !== "empty") return;
+  if (Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1) {
+    saveState();
+    const from = getCoord(p.x, p.y), to = getCoord(x, y);
+    board[p.x][p.y] = "empty"; board[x][y] = currentPlayer;
+    players[currentPlayer] = { x, y };
+    currentMoveNotation = `${currentPlayer === 'black' ? 'Siyah' : 'Beyaz'}: ${from}→${to}`;
+    updateNotationUI(currentMoveNotation, true);
+    phase = "block"; render(); updateStatus();
+  }
 }
 
 function blockCell(x, y) {
   if (board[x][y] !== "empty") return;
   saveState();
   board[x][y] = "blocked";
-  updateNotationUI(` | #${getCoord(x, y)}`, false);
+  currentMoveNotation += ` | #${getCoord(x, y)}`;
+  updateNotationUI(currentMoveNotation, false);
   render();
-  if (checkWin()) { gameOver = true; return; }
+  if (checkWin()) { gameOver = true; render(); return; }
   phase = "move"; currentPlayer = (currentPlayer === "black") ? "white" : "black";
   render(); updateStatus();
-  if(isVsAI && currentPlayer !== userColor && !gameOver) aiTimeout = setTimeout(runAI, 600);
 }
 
-// --- ULTRA AI ENGINE ---
-function runAI() {
-  if (gameOver) return;
-  const p = players[currentPlayer];
-  const op = players[userColor];
-
-  if (phase === "move") {
-    let moves = getValidMoves(p.x, p.y, board);
-    let bestMove = moves[0];
-    let maxScore = -Infinity;
-
-    moves.forEach(m => {
-        // 1. Alan Kontrolü (Gelecek potansiyeli)
-        let score = calculateTerritory(m.x, m.y, board) * 10;
-        // 2. Rakibi Kısıtlama
-        let distToOp = 15 - (Math.abs(m.x - op.x) + Math.abs(m.y - op.y));
-        score += distToOp * 5;
-        // 3. Merkeze Yakınlık
-        score += (3 - Math.abs(3-m.x)) + (3 - Math.abs(3-m.y));
-
-        if (score > maxScore) { maxScore = score; bestMove = m; }
-    });
-    movePiece(bestMove.x, bestMove.y);
-  } else {
-    let opMoves = getValidMoves(op.x, op.y, board);
-    let bestBlock;
-    if (opMoves.length > 0) {
-        let minOpTerritory = Infinity;
-        opMoves.forEach(ob => {
-            let tempBoard = board.map(row => [...row]);
-            tempBoard[ob.x][ob.y] = "blocked";
-            let t = calculateTerritory(op.x, op.y, tempBoard);
-            if (t < minOpTerritory) { minOpTerritory = t; bestBlock = ob; }
-        });
-    } else {
-        let em = [];
-        for(let i=0; i<size; i++) for(let j=0; j<size; j++) if(board[i][j]==="empty") em.push({x:i, y:j});
-        bestBlock = em[0];
-    }
-    blockCell(bestBlock.x, bestBlock.y);
-  }
+function saveState() {
+  history.push(JSON.parse(JSON.stringify({ board, currentPlayer, phase, players, gameOver, currentMoveNotation })));
 }
 
-function calculateTerritory(x, y, currentBoard) {
-    let count = 0;
-    for(let i=-2; i<=2; i++) for(let j=-2; j<=2; j++) {
-        let nx=x+i, ny=y+j;
-        if(nx>=0 && nx<size && ny>=0 && ny<size && currentBoard[nx][ny] === "empty") count++;
-    }
-    return count;
-}
-
-function getValidMoves(x, y, b) {
-  let v = [];
-  for(let dx=-1; dx<=1; dx++) for(let dy=-1; dy<=1; dy++) {
-    let nx=x+dx, ny=y+dy;
-    if(nx>=0 && nx<size && ny>=0 && ny<size && b[nx][ny]==="empty" && !(dx===0 && dy===0)) v.push({x:nx, y:ny});
-  }
-  return v;
-}
-
-// --- UTILS ---
 function undo() {
-  const steps = isVsAI ? 2 : 1;
-  if (history.length < steps || gameOver) return;
-  clearTimeout(aiTimeout);
-  for(let i=0; i<steps; i++) {
-    const s = history.pop();
-    const l = document.getElementById("notationList");
-    if (l.firstChild) l.removeChild(l.firstChild);
-    board=s.board; currentPlayer=s.currentPlayer; phase=s.phase; players=JSON.parse(JSON.stringify(s.players)); gameOver=s.gameOver;
-  }
-  if(isVsAI) { currentPlayer = userColor; phase = "move"; }
+  if (history.length === 0 || gameOver) return;
+  const prevState = history.pop();
+  const list = document.getElementById("notationList");
+  if (phase === "block") { if (list && list.firstChild) list.removeChild(list.firstChild); }
+  else { if (list && list.firstChild) list.firstChild.innerText = prevState.currentMoveNotation; }
+  board = prevState.board; currentPlayer = prevState.currentPlayer;
+  phase = prevState.phase; players = prevState.players; gameOver = prevState.gameOver;
+  currentMoveNotation = prevState.currentMoveNotation;
   render(); updateStatus();
 }
 
 function checkWin() {
-  const op = (currentPlayer === "black") ? "white" : "black";
-  if(getValidMoves(players[op].x, players[op].y, board).length === 0) {
-    const st = document.getElementById("status");
-    st.innerText = (currentPlayer === "black" ? "SİYAH" : "BEYAZ") + " KAZANDI!";
-    return true;
+  const opponent = (currentPlayer === "black") ? "white" : "black";
+  const p = players[opponent];
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      if (dx === 0 && dy === 0) continue;
+      let nx = p.x + dx, ny = p.y + dy;
+      if (nx >= 0 && ny >= 0 && nx < size && ny < size && board[nx][ny] === "empty") return false;
+    }
   }
-  return false;
+  document.getElementById("status").innerText = "KAZANAN: " + (currentPlayer === "black" ? "Siyah" : "Beyaz");
+  document.getElementById("status").style.color = "#2ecc71";
+  return true;
 }
 
 function updateStatus() {
-  const st = document.getElementById("status");
-  if (isVsAI && currentPlayer !== userColor && !gameOver) st.innerText = "AI HESAPLIYOR...";
-  else st.innerText = `${currentPlayer === "black" ? "SİYAH" : "BEYAZ"} SIRASI`;
+  const turn = (currentPlayer === "black" ? "Siyah" : "Beyaz");
+  const action = (phase === "move" ? "Taşını Oynat" : "Blok Koy!");
+  document.getElementById("status").innerText = `${turn} - ${action}`;
 }
 
-function saveState() { history.push(JSON.parse(JSON.stringify({ board, currentPlayer, phase, players, gameOver }))); }
-function getCoord(x, y) { return cols[y] + (size - x); }
-function updateNotationUI(t, isNew) {
-  const l = document.getElementById("notationList");
-  if (isNew) { const li = document.createElement("li"); li.className="notation-item"; li.innerText=t; l.prepend(li); }
-  else if (l.firstChild) l.firstChild.innerText += t;
-}
-function downloadNotation() {
-  let txt = "ABLUKA MAÇ KAYDI\n\n";
-  Array.from(document.querySelectorAll(".notation-item")).reverse().forEach((it, idx) => { txt += `${idx + 1}. ${it.innerText}\n`; });
-  const b = new Blob([txt], { type: "text/plain" });
-  const u = URL.createObjectURL(b);
-  const a = document.createElement("a"); a.href = u; a.download = "abluka_mac.txt"; a.click();
-}
+init();
 </script>
 </body>
 </html>
