@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Abluka Oyunu - Pro</title>
+<title>Abluka Oyunu - Koordinatlı</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -16,14 +16,30 @@
     align-items: flex-start; gap: 20px; flex-wrap: wrap; margin-top: 10px;
   }
 
-  #board {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
-    background: #444; padding: 8px; border-radius: 8px;
-    width: 100%; max-width: 450px;
+  /* Koordinat Çerçevesi */
+  .board-wrapper {
+    display: grid;
+    grid-template-areas: 
+      ". col col col col col col col ."
+      "row board board board board board board board row"
+      ". col col col col col col col .";
+    grid-template-columns: 25px repeat(7, 1fr) 25px;
+    background: #333; padding: 5px; border-radius: 10px;
+    width: 100%; max-width: 500px;
   }
 
+  #board {
+    grid-area: board;
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    background: #444; padding: 5px;
+  }
+
+  /* Harf ve Sayı Etiketleri */
+  .col-label { color: #aaa; font-weight: bold; font-size: 14px; padding: 5px 0; }
+  .row-label { color: #aaa; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+
   .notation-panel {
-    width: 250px; height: 450px; background: #1a1a1a; border-radius: 10px;
+    width: 250px; height: 480px; background: #1a1a1a; border-radius: 10px;
     padding: 15px; display: flex; flex-direction: column; text-align: left;
     border: 1px solid #444;
   }
@@ -39,13 +55,10 @@
     aspect-ratio: 1 / 1;
     background: linear-gradient(145deg, #deb887, #c79a6b);
     border-radius: 4px; cursor: pointer; display: flex;
-    align-items: center; justify-content: center; position: relative;
-    transition: box-shadow 0.2s, border 0.2s;
+    align-items: center; justify-content: center; transition: 0.2s;
   }
 
-  .cell::before { display: none; }
-
-  .blocked { background: #d32f2f !important; border: none !important; box-shadow: none !important; }
+  .blocked { background: #d32f2f !important; border: none !important; }
   .piece { width: 80%; height: 80%; border-radius: 6px; box-shadow: 1px 2px 4px black; }
   .black { background: #000; }
   .white { background: #fff; border: 1px solid #ccc; }
@@ -55,11 +68,12 @@
   .btn { border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
   .btn-undo { background: #3498db; color: white; }
   .btn-reset { background: #e67e22; color: white; }
-  .btn:active { transform: scale(0.95); }
 
   @media (max-width: 600px) {
     .game-container { flex-direction: column; align-items: center; }
-    .notation-panel { width: 100%; max-width: 450px; height: 180px; }
+    .notation-panel { width: 100%; max-width: 500px; height: 180px; }
+    .board-wrapper { grid-template-columns: 20px repeat(7, 1fr) 20px; }
+    .col-label, .row-label { font-size: 11px; }
   }
 </style>
 </head>
@@ -69,7 +83,21 @@
 <div id="status" style="margin-bottom: 10px; color: #ffd700; font-size: 1.1em; height: 25px;">Yükleniyor...</div>
 
 <div class="game-container">
-  <div id="board"></div>
+  <div class="board-wrapper" id="boardWrapper">
+    <div></div> <div class="col-label">A</div><div class="col-label">B</div><div class="col-label">C</div>
+    <div class="col-label">D</div><div class="col-label">E</div><div class="col-label">F</div><div class="col-label">G</div>
+    <div></div>
+
+    <div id="leftLabels" style="display:contents"></div>
+    <div id="board"></div>
+    <div id="rightLabels" style="display:contents"></div>
+
+    <div></div>
+    <div class="col-label">A</div><div class="col-label">B</div><div class="col-label">C</div>
+    <div class="col-label">D</div><div class="col-label">E</div><div class="col-label">F</div><div class="col-label">G</div>
+    <div></div>
+  </div>
+  
   <div class="notation-panel">
     <strong><small>HAMLE KAYDI</small></strong>
     <ul id="notationList"></ul>
@@ -109,13 +137,32 @@ function init() {
   players.black = { x: 0, y: 3 }; players.white = { x: 6, y: 3 };
   board[0][3] = "black"; board[6][3] = "white";
   document.getElementById("notationList").innerHTML = "";
+  
+  setupLabels();
   render();
   updateStatus();
+}
+
+function setupLabels() {
+  const left = document.getElementById("leftLabels");
+  const right = document.getElementById("rightLabels");
+  left.innerHTML = ""; right.innerHTML = "";
+  
+  for (let i = 0; i < size; i++) {
+    const lLabel = document.createElement("div");
+    lLabel.className = "row-label";
+    lLabel.innerText = size - i;
+    left.appendChild(lLabel);
+  }
 }
 
 function render() {
   const boardDiv = document.getElementById("board");
   boardDiv.innerHTML = "";
+  
+  // Sağ etiketleri i döngüsü içinde board render edilirken grid akışına uygun ekleyeceğiz 
+  // (Ancak basitlik için grid-area kullandığımızdan sadece board içini doldurmak yeterli)
+  
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
       const cell = document.createElement("div");
@@ -124,18 +171,14 @@ function render() {
       const pCur = players[currentPlayer];
       const isNearby = Math.abs(pCur.x - i) <= 1 && Math.abs(pCur.y - j) <= 1;
 
-      // Hücre blocked ise parlamayı tamamen devre dışı bırakıyoruz
-      if (board[i][j] === "blocked") {
-        cell.classList.add("blocked");
-      }
-
+      if (board[i][j] === "blocked") cell.classList.add("blocked");
+      
       if (board[i][j] === "black" || board[i][j] === "white") {
         const p = document.createElement("div");
         p.className = `piece ${board[i][j]}`;
         if (!gameOver && board[i][j] === currentPlayer) p.classList.add("glow");
         cell.appendChild(p);
       } 
-      // DÜZELTME: Parlama sadece kare BOŞ ise ve YAKIN ise gösterilecek
       else if (!gameOver && phase === "move" && isNearby && board[i][j] === "empty") {
         cell.style.boxShadow = "inset 0 0 12px rgba(255,215,0,0.9)";
         cell.style.border = "1px solid gold";
@@ -160,15 +203,11 @@ function movePiece(x, y) {
     saveState();
     const from = getCoord(p.x, p.y);
     const to = getCoord(x, y);
-    
     board[p.x][p.y] = "empty";
     board[x][y] = currentPlayer;
     players[currentPlayer] = { x, y };
-    
-    const colorName = currentPlayer === 'black' ? 'Siyah' : 'Beyaz';
-    currentMoveNotation = `${colorName}: ${from}→${to}`;
+    currentMoveNotation = `${currentPlayer === 'black' ? 'Siyah' : 'Beyaz'}: ${from}→${to}`;
     updateNotationUI(currentMoveNotation, true);
-    
     phase = "block";
     render();
     updateStatus();
@@ -179,13 +218,10 @@ function blockCell(x, y) {
   if (board[x][y] !== "empty") return;
   saveState();
   board[x][y] = "blocked";
-  
   currentMoveNotation += ` | #${getCoord(x, y)}`;
   updateNotationUI(currentMoveNotation, false);
-  
   render();
   if (checkWin()) { gameOver = true; render(); return; }
-  
   phase = "move";
   currentPlayer = (currentPlayer === "black") ? "white" : "black";
   render();
@@ -199,21 +235,12 @@ function saveState() {
 function undo() {
   if (history.length === 0 || gameOver) return;
   const prevState = history.pop();
-  
   const list = document.getElementById("notationList");
-  if (phase === "block") {
-      if (list && list.firstChild) list.removeChild(list.firstChild);
-  } else {
-      if (list && list.firstChild) list.firstChild.innerText = prevState.currentMoveNotation;
-  }
-
-  board = prevState.board;
-  currentPlayer = prevState.currentPlayer;
-  phase = prevState.phase;
-  players = prevState.players;
-  gameOver = prevState.gameOver;
+  if (phase === "block") { if (list && list.firstChild) list.removeChild(list.firstChild); }
+  else { if (list && list.firstChild) list.firstChild.innerText = prevState.currentMoveNotation; }
+  board = prevState.board; currentPlayer = prevState.currentPlayer;
+  phase = prevState.phase; players = prevState.players; gameOver = prevState.gameOver;
   currentMoveNotation = prevState.currentMoveNotation;
-
   render();
   updateStatus();
 }
