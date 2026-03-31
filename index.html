@@ -14,11 +14,7 @@
     padding: 20px;
   }
 
-  h1 {
-    margin-top: 10px;
-    font-size: 2em;
-    color: #f0f0f0;
-  }
+  h1 { margin-top: 10px; font-size: 2em; color: #f0f0f0; }
 
   #status {
     margin: 15px;
@@ -34,42 +30,25 @@
     gap: 6px;
     justify-content: center;
     margin-bottom: 20px;
-    perspective: 600px;
   }
 
   @media (max-width: 500px) {
-    #board {
-      grid-template-columns: repeat(7, 12vw);
-      gap: 4px;
-    }
-    .cell {
-      width: 12vw !important;
-      height: 12vw !important;
-    }
-    .piece {
-      width: 9vw !important;
-      height: 9vw !important;
-    }
+    #board { grid-template-columns: repeat(7, 12vw); gap: 4px; }
+    .cell { width: 12vw !important; height: 12vw !important; }
+    .piece { width: 9vw !important; height: 9vw !important; }
   }
 
   .cell {
-    width: 65px;
-    height: 65px;
+    width: 65px; height: 65px;
     background: linear-gradient(145deg, #deb887, #c79a6b);
     border-radius: 8px;
     box-shadow: 2px 2px 8px rgba(0,0,0,0.5), inset 1px 1px 3px rgba(255,255,255,0.2);
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s, box-shadow 0.2s;
-    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s; position: relative;
   }
 
-  .cell:hover {
-    transform: translateY(-2px);
-    box-shadow: 4px 4px 12px rgba(0,0,0,0.6);
-  }
+  .cell:hover { transform: translateY(-2px); }
 
   .blocked {
     background: #d32f2f !important;
@@ -78,35 +57,29 @@
   }
 
   .piece {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    box-shadow: 1px 1px 4px rgba(0,0,0,0.7), inset 1px 1px 2px rgba(255,255,255,0.2);
+    width: 48px; height: 48px; border-radius: 8px;
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.7);
     transition: transform 0.3s;
   }
 
   .black { background-color: black; }
   .white { background-color: white; border: 1px solid #ccc; }
 
-  .glow {
-    box-shadow: 0 0 15px 5px yellow;
-    transform: scale(1.1);
+  .glow { box-shadow: 0 0 15px 5px yellow; transform: scale(1.1); }
+
+  .controls { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
+
+  .btn {
+    border: none; padding: 12px 25px; font-size: 16px;
+    border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s;
   }
 
-  .btn-reset {
-    background: #e67e22;
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    font-size: 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px;
-    font-weight: bold;
-    transition: background 0.3s;
-  }
-
+  .btn-reset { background: #e67e22; color: white; }
   .btn-reset:hover { background: #d35400; }
+
+  .btn-undo { background: #3498db; color: white; }
+  .btn-undo:hover { background: #2980b9; }
+  .btn-undo:disabled { background: #7f8c8d; cursor: not-allowed; }
 
 </style>
 </head>
@@ -115,7 +88,11 @@
 <h1>Abluka Oyunu</h1>
 <div id="status"></div>
 <div id="board"></div>
-<button class="btn-reset" onclick="init()">Yeniden Başlat</button>
+
+<div class="controls">
+  <button class="btn btn-reset" onclick="init()">Yeniden Başlat</button>
+  <button id="undoBtn" class="btn btn-undo" onclick="undo()">Geri Al</button>
+</div>
 
 <script>
 const size = 7;
@@ -123,26 +100,61 @@ let board = [];
 let currentPlayer = "black";
 let phase = "move"; 
 let gameOver = false;
+let history = []; // Hamle geçmişini tutacak dizi
 
 let players = {
   black: { x: 0, y: 3 },
   white: { x: 6, y: 3 }
 };
 
+function saveState() {
+  // Mevcut durumu derin kopya (deep copy) yaparak kaydet
+  const state = {
+    board: board.map(row => [...row]),
+    currentPlayer: currentPlayer,
+    phase: phase,
+    players: JSON.parse(JSON.stringify(players)),
+    gameOver: gameOver
+  };
+  history.push(state);
+  updateUndoButton();
+}
+
+function undo() {
+  if (history.length === 0 || gameOver) return;
+  
+  const prevState = history.pop();
+  board = prevState.board;
+  currentPlayer = prevState.currentPlayer;
+  phase = prevState.phase;
+  players = prevState.players;
+  gameOver = prevState.gameOver;
+  
+  render();
+  updateStatus();
+  updateUndoButton();
+}
+
+function updateUndoButton() {
+  document.getElementById("undoBtn").disabled = history.length === 0 || gameOver;
+}
+
 function init() {
   board = Array(size).fill().map(() => Array(size).fill("empty"));
   currentPlayer = "black";
   phase = "move";
   gameOver = false;
+  history = [];
   
   players.black = { x: 0, y: 3 };
   players.white = { x: 6, y: 3 };
   
-  board[0][3] = "black";
-  board[6][3] = "white";
+  board[players.black.x][players.black.y] = "black";
+  board[players.white.x][players.white.y] = "white";
   
   render();
   updateStatus();
+  updateUndoButton();
 }
 
 function render() {
@@ -157,20 +169,16 @@ function render() {
       const pCurrent = players[currentPlayer];
       const isNearby = Math.abs(pCurrent.x - i) <= 1 && Math.abs(pCurrent.y - j) <= 1;
 
-      if (board[i][j] === "blocked") {
-        cell.classList.add("blocked");
-      }
+      if (board[i][j] === "blocked") cell.classList.add("blocked");
 
       if (board[i][j] === "black" || board[i][j] === "white") {
         const p = document.createElement("div");
         p.className = `piece ${board[i][j]}`;
-        // Sadece oyun devam ediyorsa parlat
         if (!gameOver && board[i][j] === currentPlayer) p.classList.add("glow");
         cell.appendChild(p);
       } 
-      // Sadece oyun devam ediyorsa gidilecek yerleri göster
       else if (!gameOver && phase === "move" && isNearby && board[i][j] === "empty") {
-        cell.style.boxShadow = "inset 0 0 15px gold, 0 0 10px gold";
+        cell.style.boxShadow = "inset 0 0 15px gold";
         cell.style.border = "1px solid gold";
       }
 
@@ -181,7 +189,7 @@ function render() {
 }
 
 function handleClick(x, y) {
-  if (gameOver) return; // Oyun bittiyse tıklamayı engelle
+  if (gameOver) return;
   if (phase === "move") movePiece(x, y);
   else blockCell(x, y);
 }
@@ -191,6 +199,7 @@ function movePiece(x, y) {
   if (board[x][y] !== "empty") return;
 
   if (Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1) {
+    saveState(); // Hareket etmeden önce durumu kaydet
     board[p.x][p.y] = "empty";
     board[x][y] = currentPlayer;
     players[currentPlayer] = { x, y };
@@ -203,14 +212,15 @@ function movePiece(x, y) {
 function blockCell(x, y) {
   if (board[x][y] !== "empty") return;
 
+  saveState(); // Blok koymadan önce durumu kaydet
   board[x][y] = "blocked";
   
-  // Önce tahtayı çiz ki son blok kırmızı görünsün
   render();
 
   if (checkWin()) {
     gameOver = true;
-    render(); // Glow efektlerini kaldırmak için tekrar çiz
+    render();
+    updateUndoButton();
     return;
   }
 
@@ -223,21 +233,14 @@ function blockCell(x, y) {
 function checkWin() {
   const opponent = (currentPlayer === "black") ? "white" : "black";
   const p = players[opponent];
-
   let canMove = false;
 
   for (let dx = -1; dx <= 1; dx++) {
     for (let dy = -1; dy <= 1; dy++) {
       if (dx === 0 && dy === 0) continue;
-
       let nx = p.x + dx;
       let ny = p.y + dy;
-
-      if (
-        nx >= 0 && ny >= 0 &&
-        nx < size && ny < size &&
-        board[nx][ny] === "empty"
-      ) {
+      if (nx >= 0 && ny >= 0 && nx < size && ny < size && board[nx][ny] === "empty") {
         canMove = true;
       }
     }
@@ -249,7 +252,6 @@ function checkWin() {
     document.getElementById("status").style.color = "#2ecc71";
     return true;
   }
-
   return false;
 }
 
@@ -257,6 +259,7 @@ function updateStatus() {
   const turnText = (currentPlayer === "black" ? "Siyah" : "Beyaz");
   const actionText = (phase === "move" ? "Taşını Oynat" : "Blok Koy!");
   document.getElementById("status").innerText = `${turnText} - ${actionText}`;
+  document.getElementById("status").style.color = "#ffd700";
 }
 
 init();
