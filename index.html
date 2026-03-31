@@ -2,79 +2,84 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Abluka Oyunu - Notasyonlu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Abluka Oyunu - Pro</title>
 <style>
+  * { box-sizing: border-box; }
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #2b2b2b; color: white; text-align: center; margin: 0; padding: 20px;
-    display: flex; flex-direction: column; align-items: center;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #2b2b2b; color: white; text-align: center; margin: 0; padding: 10px;
   }
 
-  .game-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+  .game-container {
+    display: flex; flex-direction: row; justify-content: center;
+    align-items: flex-start; gap: 20px; flex-wrap: wrap; margin-top: 10px;
+  }
 
   #board {
-    display: grid; grid-template-columns: repeat(7, 60px); gap: 6px;
-    background: #444; padding: 10px; border-radius: 10px;
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    background: #444; padding: 8px; border-radius: 8px;
+    width: 100%; max-width: 450px; /* Mobil uyum için genişlik kısıtlandı */
   }
 
   .notation-panel {
-    width: 200px; height: 460px; background: #1a1a1a; border-radius: 10px;
-    padding: 10px; display: flex; flex-direction: column; text-align: left;
+    width: 250px; height: 450px; background: #1a1a1a; border-radius: 10px;
+    padding: 15px; display: flex; flex-direction: column; text-align: left;
+    border: 1px solid #444;
   }
 
   #notationList {
-    flex-grow: 1; overflow-y: auto; font-family: monospace; font-size: 14px;
-    color: #ccc; list-style: none; padding: 0; margin-top: 10px; border-top: 1px solid #333;
+    flex-grow: 1; overflow-y: auto; font-family: 'Courier New', monospace;
+    font-size: 13px; color: #aaa; list-style: none; padding: 0; margin-top: 10px;
   }
 
-  .notation-item { padding: 4px 0; border-bottom: 1px solid #222; }
+  .notation-item { padding: 6px 0; border-bottom: 1px solid #333; color: #eee; }
 
   .cell {
-    width: 60px; height: 60px; background: linear-gradient(145deg, #deb887, #c79a6b);
-    border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    position: relative; transition: 0.2s;
+    aspect-ratio: 1 / 1; /* Kare formunu korur */
+    background: linear-gradient(145deg, #deb887, #c79a6b);
+    border-radius: 4px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; position: relative;
   }
 
-  /* Koordinat Etiketleri */
-  .cell::before {
-    content: attr(data-coord); position: absolute; bottom: 2px; right: 2px;
-    font-size: 9px; color: rgba(0,0,0,0.3); font-weight: bold;
-  }
+  /* Hücre isimleri gizlendi */
+  .cell::before { display: none; }
 
-  .blocked { background: #d32f2f !important; }
-  .piece { width: 45px; height: 45px; border-radius: 8px; box-shadow: 1px 1px 5px black; }
+  .blocked { background: #d32f2f !important; border: none; }
+  .piece { width: 80%; height: 80%; border-radius: 6px; box-shadow: 1px 2px 4px black; }
   .black { background: #000; }
   .white { background: #fff; border: 1px solid #ccc; }
-  .glow { box-shadow: 0 0 15px 5px yellow; transform: scale(1.05); }
+  .glow { box-shadow: 0 0 12px 4px yellow; transform: scale(1.05); }
 
-  .controls { margin-top: 20px; display: flex; gap: 10px; }
-  .btn { border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+  .controls { margin-top: 15px; display: flex; gap: 10px; justify-content: center; }
+  .btn { border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
   .btn-undo { background: #3498db; color: white; }
   .btn-reset { background: #e67e22; color: white; }
-  
+  .btn:active { transform: scale(0.95); }
+
   @media (max-width: 600px) {
     .game-container { flex-direction: column; align-items: center; }
-    .notation-panel { width: 90%; height: 150px; }
+    .notation-panel { width: 100%; max-width: 450px; height: 180px; }
+    h1 { font-size: 1.5em; }
   }
 </style>
 </head>
 <body>
 
 <h1>Abluka Oyunu</h1>
-<div id="status" style="margin-bottom: 15px; color: #ffd700; font-weight: bold;">Siyah - Taşını Oynat</div>
+<div id="status" style="margin-bottom: 10px; color: #ffd700; font-size: 1.1em; height: 25px;">Siyah Başlıyor...</div>
 
 <div class="game-container">
   <div id="board"></div>
   
   <div class="notation-panel">
-    <strong>Hamle Kaydı</strong>
+    <strong><small>HAMLE KAYDI</small></strong>
     <ul id="notationList"></ul>
   </div>
 </div>
 
 <div class="controls">
-  <button class="btn btn-reset" onclick="init()">Yeniden Başlat</button>
+  <button class="btn btn-reset" onclick="init()">Sıfırla</button>
   <button id="undoBtn" class="btn btn-undo" onclick="undo()">Geri Al</button>
 </div>
 
@@ -82,21 +87,21 @@
 const size = 7;
 const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 let board = [], currentPlayer = "black", phase = "move", gameOver = false, history = [];
-
 let players = { black: { x: 0, y: 3 }, white: { x: 6, y: 3 } };
+let currentMoveNotation = ""; // Tek satır için geçici tutucu
 
-function getCoord(x, y) {
-  // x satır, y sütun. Satrançta aşağıdan yukarı sayıldığı için 7-x yapıyoruz.
-  return cols[y] + (size - x);
-}
+function getCoord(x, y) { return cols[y] + (size - x); }
 
-function addNotation(text) {
+function updateNotationUI(text, isNewMove) {
   const list = document.getElementById("notationList");
-  const li = document.createElement("li");
-  li.className = "notation-item";
-  const turn = Math.floor(history.length / 2) + 1;
-  li.innerText = `${text}`;
-  list.prepend(li); // En son hamleyi en üstte göster
+  if (isNewMove) {
+    const li = document.createElement("li");
+    li.className = "notation-item";
+    li.innerText = text;
+    list.prepend(li);
+  } else {
+    list.firstChild.innerText = text;
+  }
 }
 
 function init() {
@@ -116,10 +121,9 @@ function render() {
     for (let j = 0; j < size; j++) {
       const cell = document.createElement("div");
       cell.className = "cell";
-      cell.setAttribute("data-coord", getCoord(i, j));
       
-      const pCurrent = players[currentPlayer];
-      const isNearby = Math.abs(pCurrent.x - i) <= 1 && Math.abs(pCurrent.y - j) <= 1;
+      const pCur = players[currentPlayer];
+      const isNearby = Math.abs(pCur.x - i) <= 1 && Math.abs(pCur.y - j) <= 1;
 
       if (board[i][j] === "blocked") cell.classList.add("blocked");
       if (board[i][j] === "black" || board[i][j] === "white") {
@@ -128,7 +132,8 @@ function render() {
         if (!gameOver && board[i][j] === currentPlayer) p.classList.add("glow");
         cell.appendChild(p);
       } else if (!gameOver && phase === "move" && isNearby) {
-        cell.style.boxShadow = "inset 0 0 10px gold";
+        cell.style.boxShadow = "inset 0 0 10px rgba(255,215,0,0.8)";
+        cell.style.border = "1px solid gold";
       }
       cell.onclick = () => handleClick(i, j);
       boardDiv.appendChild(cell);
@@ -146,15 +151,18 @@ function movePiece(x, y) {
   const p = players[currentPlayer];
   if (board[x][y] !== "empty") return;
   if (Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1) {
-    const fromCoord = getCoord(p.x, p.y);
-    const toCoord = getCoord(x, y);
-    
     saveState();
+    const from = getCoord(p.x, p.y);
+    const to = getCoord(x, y);
+    
     board[p.x][p.y] = "empty";
     board[x][y] = currentPlayer;
     players[currentPlayer] = { x, y };
     
-    addNotation(`${currentPlayer === 'black' ? 'S' : 'B'}: ${fromCoord}→${toCoord}`);
+    // Satırın başını hazırla
+    const colorName = currentPlayer === 'black' ? 'Siyah' : 'Beyaz';
+    currentMoveNotation = `${colorName}: ${from}→${to}`;
+    updateNotationUI(currentMoveNotation, true);
     
     phase = "block";
     render();
@@ -166,7 +174,10 @@ function blockCell(x, y) {
   if (board[x][y] !== "empty") return;
   saveState();
   board[x][y] = "blocked";
-  addNotation(`${currentPlayer === 'black' ? 'S' : 'B'}: #${getCoord(x, y)}`);
+  
+  // Mevcut satırı güncelle
+  currentMoveNotation += ` | #${getCoord(x, y)}`;
+  updateNotationUI(currentMoveNotation, false);
   
   render();
   if (checkWin()) { gameOver = true; render(); return; }
@@ -178,15 +189,29 @@ function blockCell(x, y) {
 }
 
 function saveState() {
-  history.push(JSON.parse(JSON.stringify({ board, currentPlayer, phase, players, gameOver })));
+  history.push(JSON.parse(JSON.stringify({ board, currentPlayer, phase, players, gameOver, currentMoveNotation })));
 }
 
 function undo() {
   if (history.length === 0 || gameOver) return;
   const prevState = history.pop();
-  board = prevState.board; currentPlayer = prevState.currentPlayer;
-  phase = prevState.phase; players = prevState.players; gameOver = prevState.gameOver;
-  document.getElementById("notationList").removeChild(document.getElementById("notationList").firstChild);
+  
+  // Eğer blok fazındayken geri alırsak notasyon satırını sileriz
+  if (phase === "block") {
+      document.getElementById("notationList").removeChild(document.getElementById("notationList").firstChild);
+  } else {
+      // Eğer hareket fazındayken geri alırsak (rakibin bloğunu geri almak demek), 
+      // notasyon satırı zaten hareket+blok içeriyordu, onu eski haline (sadece hareket) çekeriz.
+      document.getElementById("notationList").firstChild.innerText = prevState.currentMoveNotation;
+  }
+
+  board = prevState.board;
+  currentPlayer = prevState.currentPlayer;
+  phase = prevState.phase;
+  players = prevState.players;
+  gameOver = prevState.gameOver;
+  currentMoveNotation = prevState.currentMoveNotation;
+
   render();
   updateStatus();
 }
@@ -202,6 +227,7 @@ function checkWin() {
     }
   }
   document.getElementById("status").innerText = "KAZANAN: " + (currentPlayer === "black" ? "Siyah" : "Beyaz");
+  document.getElementById("status").style.color = "#2ecc71";
   return true;
 }
 
