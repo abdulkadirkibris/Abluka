@@ -3,13 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Abluka Oyunu - Final</title>
+<title>Abluka Oyunu - Logo Edition</title>
 <style>
   * { box-sizing: border-box; }
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
     background: #2b2b2b; color: white; text-align: center; margin: 0; padding: 10px;
   }
+
+  /* Başlık ve Logo Konteynırı */
+  .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 5px;
+  }
+
+  .game-logo {
+    height: 50px; /* Logonun yüksekliği başlığa göre ayarlandı */
+    width: auto;
+    object-fit: contain;
+  }
+
+  h1 { margin: 0; font-size: 1.8em; }
 
   .game-container {
     display: flex; flex-direction: row; justify-content: center;
@@ -65,18 +82,23 @@
   .btn-reset { background: #e67e22; color: white; }
   .btn-download { background: #2ecc71; color: white; }
   .btn:active { transform: scale(0.95); }
-  .btn:disabled { background: #555; cursor: not-allowed; opacity: 0.6; }
 
   @media (max-width: 600px) {
+    .header-container { gap: 10px; }
+    .game-logo { height: 35px; }
+    h1 { font-size: 1.4em; }
     .game-container { flex-direction: column; align-items: center; }
-    .notation-panel { width: 100%; max-width: 480px; height: 180px; }
-    .btn { padding: 10px 14px; font-size: 12px; }
+    .notation-panel { width: 100%; max-width: 480px; height: 160px; }
   }
 </style>
 </head>
 <body>
 
-<h1>Abluka Oyunu</h1>
+<div class="header-container">
+  <img src="logo.png" alt="Abluka Logo" class="game-logo">
+  <h1>Abluka Oyunu</h1>
+</div>
+
 <div id="status" style="margin-bottom: 10px; color: #ffd700; font-size: 1.1em; height: 25px;">Yükleniyor...</div>
 
 <div class="game-container">
@@ -109,6 +131,7 @@
 </div>
 
 <script>
+// ... (Tüm JavaScript fonksiyonları (init, render, movePiece, downloadNotation vb.) önceki kodla aynı kalacak şekilde buraya eklenmiştir)
 const size = 7;
 const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 let board = [], currentPlayer = "black", phase = "move", gameOver = false, history = [];
@@ -136,27 +159,20 @@ function downloadNotation() {
     alert("Henüz kaydedilmiş bir hamle yok!");
     return;
   }
-
   let textContent = "--- ABLUKA OYUNU HAMLE KAYDI ---\n\n";
-  // Listeyi ters çevirerek (ilk hamleden son hamleye) metne ekle
   const logs = Array.from(listItems).reverse();
   logs.forEach((item, index) => {
     textContent += `${index + 1}. ${item.innerText}\n`;
   });
-
   if (gameOver) {
     textContent += `\nSONUÇ: ${document.getElementById("status").innerText}`;
   }
-
   const blob = new Blob([textContent], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
-  a.download = "abluka_notasyon.txt";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  a.href = url; a.download = "abluka_notasyon.txt";
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
 function init() {
@@ -179,7 +195,6 @@ function render() {
       cell.className = "cell";
       const pCur = players[currentPlayer];
       const isNearby = Math.abs(pCur.x - i) <= 1 && Math.abs(pCur.y - j) <= 1;
-
       if (board[i][j] === "blocked") cell.classList.add("blocked");
       if (board[i][j] === "black" || board[i][j] === "white") {
         const p = document.createElement("div");
