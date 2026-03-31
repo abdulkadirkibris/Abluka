@@ -3,85 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Abluka - AI & Büyük Tahta Edition</title>
+<title>Abluka Pro - Ultra AI</title>
 <style>
   * { box-sizing: border-box; }
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: #2b2b2b; color: white; text-align: center; margin: 0; padding: 10px;
+    background: #1a1a1a; color: white; text-align: center; margin: 0; padding: 10px;
     display: flex; flex-direction: column; align-items: center; min-height: 100vh;
   }
 
   /* --- MENÜ TASARIMLARI --- */
   #mainMenu, #setupMenu {
-    background: #3d3d3d; padding: 30px; border-radius: 20px;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.6); width: 95%; max-width: 400px; margin-top: 30px;
+    background: #2d2d2d; padding: 30px; border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.8); width: 95%; max-width: 400px; margin-top: 30px;
+    border: 1px solid #444;
   }
-  .menu-logo { height: 80px; margin-bottom: 15px; object-fit: contain; }
+  .menu-logo { height: 80px; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(52, 152, 219, 0.5)); }
   .menu-btn {
     display: block; width: 100%; padding: 18px; margin: 12px 0;
     border: none; border-radius: 10px; font-size: 18px; font-weight: bold;
     cursor: pointer; transition: 0.3s; color: white;
   }
-  .btn-primary { background: #3498db; }
-  .btn-secondary { background: #9b59b6; }
-  .btn-start { background: #2ecc71; margin-top: 20px; }
-  .menu-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+  .btn-primary { background: #2980b9; }
+  .btn-secondary { background: #8e44ad; }
+  .btn-start { background: #27ae60; margin-top: 20px; }
+  .menu-btn:hover { transform: scale(1.02); filter: brightness(1.2); }
 
   /* --- OYUN ALANI --- */
   #gameArea { display: none; width: 100%; flex-direction: column; align-items: center; }
-  .header-container { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 5px 0 15px 0; }
-  .game-logo { height: 40px; width: auto; object-fit: contain; }
-  h1 { margin: 0; font-size: 32px; line-height: 40px; }
+  .header-container { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 5px 0 10px 0; }
+  .game-logo { height: 35px; width: auto; }
+  h1 { margin: 0; font-size: 28px; color: #3498db; }
 
   .game-container {
     display: flex; flex-direction: row; justify-content: center;
-    align-items: flex-start; gap: 20px; flex-wrap: wrap; width: 100%;
+    align-items: flex-start; gap: 15px; flex-wrap: wrap; width: 100%;
   }
 
-  /* TAHTA BOYUTU - MOBİLDE MAKSİMUM GENİŞLİK */
   .board-outer {
-    background: #3d3d3d; padding: 8px; border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 500px;
+    background: #333; padding: 10px; border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 480px;
+    border: 2px solid #444;
   }
   .grid-container {
     display: grid; grid-template-columns: 25px repeat(7, 1fr);
     grid-template-rows: repeat(7, 1fr) 25px; width: 100%;
   }
-  .row-label, .col-label { display: flex; align-items: center; justify-content: center; font-weight: bold; color: #aaa; font-size: 14px; }
+  .row-label, .col-label { display: flex; align-items: center; justify-content: center; font-weight: bold; color: #888; font-size: 13px; }
   
   #board { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; grid-column: 2 / 9; grid-row: 1 / 8; }
-  .cell { aspect-ratio: 1 / 1; background: linear-gradient(145deg, #deb887, #c79a6b); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-  .blocked { background: #d32f2f !important; border: none !important; }
-  .piece { width: 80%; height: 80%; border-radius: 6px; box-shadow: 1px 2px 4px black; }
-  .black { background: #000; }
-  .white { background: #fff; border: 1px solid #ccc; }
-  .glow { box-shadow: 0 0 12px 4px yellow; transform: scale(1.05); }
+  .cell { aspect-ratio: 1 / 1; background: #555; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; position: relative; }
+  .blocked { background: #c0392b !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+  .piece { width: 85%; height: 85%; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.6); }
+  .black { background: radial-gradient(circle at 30% 30%, #444, #000); }
+  .white { background: radial-gradient(circle at 30% 30%, #fff, #bbb); border: 1px solid #999; }
+  .glow { box-shadow: 0 0 15px 5px rgba(52, 152, 219, 0.8); animation: pulse 1.5s infinite; }
 
-  /* NOTASYON PANELİ */
+  @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
   .notation-panel {
-    width: 280px; height: 480px; background: #1a1a1a; border-radius: 10px;
-    padding: 15px; display: flex; flex-direction: column; text-align: left; border: 1px solid #444;
+    width: 280px; height: 430px; background: #000; border-radius: 12px;
+    padding: 15px; display: flex; flex-direction: column; text-align: left; border: 1px solid #333;
   }
-  #notationList { flex-grow: 1; overflow-y: auto; font-family: monospace; font-size: 13px; color: #aaa; list-style: none; padding: 0; margin-top: 10px; }
-  .notation-item { padding: 6px 0; border-bottom: 1px solid #333; color: #eee; }
+  #notationList { flex-grow: 1; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; color: #2ecc71; list-style: none; padding: 0; }
+  .notation-item { padding: 4px 0; border-bottom: 1px solid #222; }
 
-  /* KONTROLLER */
-  .controls { margin-top: 20px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; width: 100%; max-width: 500px; }
-  .btn { border: none; padding: 14px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; color: white; flex: 1; }
-  .btn-undo { background: #3498db; }
-  .btn-reset { background: #e67e22; }
-  .btn-download { background: #2ecc71; }
-  .btn-exit { background: #e74c3c; }
+  .controls { margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; width: 100%; max-width: 480px; }
+  .btn { border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; flex: 1; min-width: 80px; transition: 0.2s; }
+  .btn-undo { background: #2980b9; }
+  .btn-reset { background: #f39c12; }
+  .btn-download { background: #27ae60; }
+  .btn-exit { background: #c0392b; }
 
-  /* MOBİL ÖZEL AYARLAR */
   @media (max-width: 600px) {
-    h1 { font-size: 24px; line-height: 30px; }
-    .board-outer { max-width: 98vw; padding: 5px; }
-    .grid-container { grid-template-columns: 20px repeat(7, 1fr); grid-template-rows: repeat(7, 1fr) 20px; }
-    .row-label, .col-label { font-size: 11px; }
-    .notation-panel { width: 98vw; height: 130px; margin-top: 10px; }
-    .btn { padding: 12px 8px; font-size: 12px; }
+    .board-outer { max-width: 98vw; }
+    .notation-panel { width: 98vw; height: 120px; }
+    h1 { font-size: 22px; }
   }
 </style>
 </head>
@@ -89,38 +86,38 @@
 
 <div id="mainMenu">
   <img src="logo.png" alt="Abluka" class="menu-logo">
-  <h2 style="margin:0 0 20px 0; letter-spacing: 2px;">ABLUKA</h2>
-  <button class="menu-btn btn-primary" onclick="showSetup(false)">2 Kişilik Oyna</button>
-  <button class="menu-btn btn-secondary" onclick="showSetup(true)">Yapay Zekaya Karşı</button>
+  <h2 style="margin:0 0 20px 0; letter-spacing: 3px; color:#3498db;">ABLUKA PRO</h2>
+  <button class="menu-btn btn-primary" onclick="showSetup(false)">2 KİŞİLİK</button>
+  <button class="menu-btn btn-secondary" onclick="showSetup(true)">YAPAY ZEKA (USTA)</button>
 </div>
 
 <div id="setupMenu" style="display: none;">
-  <h3>Oyun Ayarları</h3>
+  <h3>Savaş Hazırlığı</h3>
   <div style="text-align:left; margin:15px 0;">
-    <label style="color:#aaa; font-size:14px;">Taşın:</label>
-    <select id="playerColor" style="width:100%; padding:12px; margin-top:5px; background:#2b2b2b; color:white; border:1px solid #555; font-size:16px;">
+    <label>Rengini Seç:</label>
+    <select id="playerColor" style="width:100%; padding:12px; background:#1a1a1a; color:white; border:1px solid #444; border-radius:8px;">
       <option value="black">Siyah (Önce Başlar)</option>
       <option value="white">Beyaz</option>
     </select>
   </div>
   <div id="difficultySection" style="text-align:left; margin:15px 0;">
-    <label style="color:#aaa; font-size:14px;">AI Zorluğu:</label>
-    <select id="difficulty" style="width:100%; padding:12px; margin-top:5px; background:#2b2b2b; color:white; border:1px solid #555; font-size:16px;">
-      <option value="easy">Kolay</option>
-      <option value="medium" selected>Orta</option>
-      <option value="hard">Zor</option>
+    <label>AI Zekası:</label>
+    <select id="difficulty" style="width:100%; padding:12px; background:#1a1a1a; color:white; border:1px solid #444; border-radius:8px;">
+      <option value="easy">Çaylak (Rastgele)</option>
+      <option value="medium">Asker (Mantıklı)</option>
+      <option value="hard" selected>General (Stratejik - Zor)</option>
     </select>
   </div>
-  <button class="menu-btn btn-start" onclick="startGame()">Başlat</button>
-  <button class="menu-btn" style="background:#555" onclick="backToMain()">Geri</button>
+  <button class="menu-btn btn-start" onclick="startGame()">SAVAŞI BAŞLAT</button>
+  <button class="menu-btn" style="background:#444" onclick="backToMain()">GERİ</button>
 </div>
 
 <div id="gameArea">
   <div class="header-container">
-    <img src="logo.png" alt="Abluka Logo" class="game-logo">
-    <h1>Abluka Oyunu</h1>
+    <img src="logo.png" alt="Logo" class="game-logo">
+    <h1>ABLUKA</h1>
   </div>
-  <div id="status" style="margin-bottom: 8px; font-weight: bold; height: 24px;"></div>
+  <div id="status" style="margin-bottom: 10px; font-weight: bold; color: #f1c40f;"></div>
   <div class="game-container">
     <div class="board-outer">
       <div class="grid-container">
@@ -130,27 +127,25 @@
       </div>
     </div>
     <div class="notation-panel">
-      <strong><small>HAMLE KAYDI</small></strong>
+      <strong><small>OPERASYON KAYDI</small></strong>
       <ul id="notationList"></ul>
     </div>
   </div>
   <div class="controls">
-    <button class="btn btn-undo" onclick="undo()">Geri Al</button>
-    <button class="btn btn-reset" onclick="initGame()">Sıfırla</button>
-    <button class="btn btn-download" onclick="downloadNotation()">Notasyon</button>
-    <button class="btn btn-exit" onclick="backToMain()">Çıkış</button>
+    <button class="btn btn-undo" onclick="undo()">GERİ AL</button>
+    <button class="btn btn-reset" onclick="initGame()">RESET</button>
+    <button class="btn btn-download" onclick="downloadNotation()">KAYDET</button>
+    <button class="btn btn-exit" onclick="backToMain()">ÇIKIŞ</button>
   </div>
 </div>
 
 <script>
-// --- OYUN DEĞİŞKENLERİ ---
 const size = 7;
 const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 let board = [], currentPlayer = "black", phase = "move", gameOver = false, history = [];
 let players = { black: { x: 0, y: 3 }, white: { x: 6, y: 3 } };
-let currentMoveNotation = "", isVsAI = false, userColor = "black", aiDifficulty = "medium", aiTimeout = null;
+let currentMoveNotation = "", isVsAI = false, userColor = "black", aiDifficulty = "hard", aiTimeout = null;
 
-// --- MENÜ KONTROLLERİ ---
 function showSetup(vsAI) {
   isVsAI = vsAI;
   document.getElementById("mainMenu").style.display = "none";
@@ -173,7 +168,6 @@ function startGame() {
   initGame();
 }
 
-// --- OYUN MANTIĞI ---
 function initGame() {
   clearTimeout(aiTimeout);
   board = Array(size).fill().map(() => Array(size).fill("empty"));
@@ -182,7 +176,7 @@ function initGame() {
   board[0][3] = "black"; board[6][3] = "white";
   document.getElementById("notationList").innerHTML = "";
   render(); updateStatus();
-  if(isVsAI && currentPlayer !== userColor) aiTimeout = setTimeout(runAI, 800);
+  if(isVsAI && currentPlayer !== userColor) aiTimeout = setTimeout(runAI, 600);
 }
 
 function render() {
@@ -201,7 +195,8 @@ function render() {
       } else if (!gameOver && phase === "move" && (currentPlayer === userColor || !isVsAI)) {
         const pCur = players[currentPlayer];
         if (Math.abs(pCur.x - i) <= 1 && Math.abs(pCur.y - j) <= 1 && board[i][j] === "empty") {
-          cell.style.boxShadow = "inset 0 0 12px gold";
+          cell.style.background = "#446644";
+          cell.style.boxShadow = "inset 0 0 10px #2ecc71";
         }
       }
       cell.onclick = () => { if(!(isVsAI && currentPlayer !== userColor)) handleClick(i, j); };
@@ -225,7 +220,7 @@ function movePiece(x, y) {
   players[currentPlayer] = { x, y };
   updateNotationUI(currentMoveNotation, true);
   phase = "block"; render(); updateStatus();
-  if(isVsAI && currentPlayer !== userColor) aiTimeout = setTimeout(runAI, 800);
+  if(isVsAI && currentPlayer !== userColor) aiTimeout = setTimeout(runAI, 600);
 }
 
 function blockCell(x, y) {
@@ -238,79 +233,119 @@ function blockCell(x, y) {
   if (checkWin()) { gameOver = true; return; }
   phase = "move"; currentPlayer = (currentPlayer === "black") ? "white" : "black";
   render(); updateStatus();
-  if(isVsAI && currentPlayer !== userColor && !gameOver) aiTimeout = setTimeout(runAI, 800);
+  if(isVsAI && currentPlayer !== userColor && !gameOver) aiTimeout = setTimeout(runAI, 600);
 }
 
-// --- YAPAY ZEKA ---
+// --- GELİŞMİŞ YAPAY ZEKA (STRATEJİK) ---
 function runAI() {
   if (gameOver) return;
-  const p = players[currentPlayer], op = players[userColor];
+  const p = players[currentPlayer];
+  const op = players[userColor];
+
   if (phase === "move") {
-    let moves = getValidMoves(p.x, p.y);
-    moves.sort((a, b) => {
-      let d1 = Math.abs(a.x - op.x) + Math.abs(a.y - op.y);
-      let d2 = Math.abs(b.x - op.x) + Math.abs(b.y - op.y);
-      return aiDifficulty === "hard" ? d1 - d2 : (Math.random() > 0.4 ? d1 - d2 : 0);
-    });
-    movePiece(moves[0].x, moves[0].y);
-  } else {
-    let opMoves = getValidMoves(op.x, op.y);
-    if(opMoves.length > 0 && aiDifficulty !== "easy") blockCell(opMoves[0].x, opMoves[0].y);
-    else {
-      let em = [];
-      for(let i=0; i<size; i++) for(let j=0; j<size; j++) if(board[i][j]==="empty") em.push({x:i, y:j});
-      let b = em[Math.floor(Math.random()*em.length)];
-      blockCell(b.x, b.y);
+    let moves = getValidMoves(p.x, p.y, board);
+    if (aiDifficulty === "easy") {
+        let m = moves[Math.floor(Math.random()*moves.length)];
+        movePiece(m.x, m.y);
+    } else {
+        // En iyi kareyi seç (Alan Kontrolü + Mesafe)
+        let bestMove = moves[0];
+        let maxScore = -9999;
+
+        moves.forEach(m => {
+            let score = calculateTerritory(m.x, m.y, board); // Kendi hareket alanı
+            let distToCenter = 3 - (Math.abs(3-m.x) + Math.abs(3-m.y)); // Merkeze yakınlık
+            score += distToCenter * 2;
+            
+            if (aiDifficulty === "hard") {
+                // Rakibi kısıtlama kontrolü
+                let distToOp = 10 - (Math.abs(m.x - op.x) + Math.abs(m.y - op.y));
+                score += distToOp * 3;
+            }
+
+            if (score > maxScore) { maxScore = score; bestMove = m; }
+        });
+        movePiece(bestMove.x, bestMove.y);
     }
+  } else {
+    // BLOKLAMA STRATEJİSİ
+    let bestBlock;
+    if (aiDifficulty === "easy") {
+        let em = getEmptyCells(board);
+        bestBlock = em[Math.floor(Math.random()*em.length)];
+    } else {
+        let opMoves = getValidMoves(op.x, op.y, board);
+        if (opMoves.length > 0) {
+            // Rakibin kaçabileceği kareleri öncelikli kapat
+            bestBlock = opMoves[0];
+            // Eğer "Hard" ise rakibi en dar alana hapsedecek bloğu seç
+            if (aiDifficulty === "hard") {
+                let minOpTerritory = 999;
+                opMoves.forEach(ob => {
+                    let tempBoard = board.map(row => [...row]);
+                    tempBoard[ob.x][ob.y] = "blocked";
+                    let t = calculateTerritory(op.x, op.y, tempBoard);
+                    if (t < minOpTerritory) { minOpTerritory = t; bestBlock = ob; }
+                });
+            }
+        } else {
+            let em = getEmptyCells(board);
+            bestBlock = em[0];
+        }
+    }
+    blockCell(bestBlock.x, bestBlock.y);
   }
 }
 
-function getValidMoves(x, y) {
+// Alan Hesabı (Flood Fill benzeri basit sayım)
+function calculateTerritory(x, y, currentBoard) {
+    let count = 0;
+    for(let i=-2; i<=2; i++) {
+        for(let j=-2; j<=2; j++) {
+            let nx=x+i, ny=y+j;
+            if(nx>=0 && nx<size && ny>=0 && ny<size && currentBoard[nx][ny] === "empty") count++;
+        }
+    }
+    return count;
+}
+
+function getValidMoves(x, y, currentBoard) {
   let v = [];
-  for(let dx=-1; dx<=1; dx++) for(let dy=-1; dy<=1; dy++) {
-    let nx=x+dx, ny=y+dy;
-    if(nx>=0 && nx<size && ny>=0 && ny<size && board[nx][ny]==="empty" && !(dx===0 && dy===0)) v.push({x:nx, y:ny});
+  for(let dx=-1; dx<=1; dx++) {
+    for(let dy=-1; dy<=1; dy++) {
+        let nx=x+dx, ny=y+dy;
+        if(nx>=0 && nx<size && ny>=0 && ny<size && currentBoard[nx][ny]==="empty" && !(dx===0 && dy===0)) v.push({x:nx, y:ny});
+    }
   }
   return v;
 }
 
-// --- GERİ AL (UNDO) ---
+function getEmptyCells(b) {
+    let e = [];
+    for(let i=0; i<size; i++) for(let j=0; j<size; j++) if(b[i][j]==="empty") e.push({x:i, y:j});
+    return e;
+}
+
+// --- DİĞER FONKSİYONLAR ---
 function undo() {
   const steps = isVsAI ? 2 : 1;
   if (history.length < steps || gameOver) return;
-  
-  clearTimeout(aiTimeout); // AI'nın planlı hamlesini iptal et
-  
-  for(let i = 0; i < steps; i++) {
+  clearTimeout(aiTimeout);
+  for(let i=0; i<steps; i++) {
     const s = history.pop();
-    const list = document.getElementById("notationList");
-    if (list && list.firstChild) list.removeChild(list.firstChild);
-    
-    // Verileri geçmişe döndür
-    board = s.board;
-    currentPlayer = s.currentPlayer;
-    phase = s.phase;
-    players = JSON.parse(JSON.stringify(s.players));
-    gameOver = s.gameOver;
-    currentMoveNotation = s.currentMoveNotation;
+    const l = document.getElementById("notationList");
+    if (l.firstChild) l.removeChild(l.firstChild);
+    board=s.board; currentPlayer=s.currentPlayer; phase=s.phase; players=JSON.parse(JSON.stringify(s.players)); gameOver=s.gameOver; currentMoveNotation=s.currentMoveNotation;
   }
-
-  // AI modunda geri alındığında sıra her zaman oyuncuya (userColor) ve hareket fazına (move) geçer
-  if(isVsAI) {
-    currentPlayer = userColor;
-    phase = "move";
-  }
-
-  render();
-  updateStatus();
+  if(isVsAI) { currentPlayer = userColor; phase = "move"; }
+  render(); updateStatus();
 }
 
-// --- YARDIMCI FONKSİYONLAR ---
 function checkWin() {
   const op = (currentPlayer === "black") ? "white" : "black";
-  if(getValidMoves(players[op].x, players[op].y).length === 0) {
+  if(getValidMoves(players[op].x, players[op].y, board).length === 0) {
     const st = document.getElementById("status");
-    st.innerText = "KAZANAN: " + (currentPlayer === "black" ? "Siyah" : "Beyaz");
+    st.innerText = "ZAFER: " + (currentPlayer === "black" ? "Siyah" : "Beyaz");
     st.style.color = "#2ecc71";
     return true;
   }
@@ -320,10 +355,10 @@ function checkWin() {
 function updateStatus() {
   const st = document.getElementById("status");
   if (isVsAI && currentPlayer !== userColor && !gameOver) {
-    st.innerText = "Yapay Zeka Düşünüyor..."; st.style.color = "#aaa";
+    st.innerText = "GENERAL DÜŞÜNÜYOR..."; st.style.color = "#e74c3c";
   } else {
-    st.innerText = `${currentPlayer === "black" ? "Siyah" : "Beyaz"} - ${phase === "move" ? "Taşını Oynat" : "Blok Koy!"}`;
-    st.style.color = "#ffd700";
+    st.innerText = `${currentPlayer === "black" ? "SİYAH" : "BEYAZ"} HAMLESİ`;
+    st.style.color = "#3498db";
   }
 }
 
@@ -335,11 +370,11 @@ function updateNotationUI(t, isNew) {
   else if (l.firstChild) l.firstChild.innerText = t;
 }
 function downloadNotation() {
-  let txt = "--- ABLUKA OYUNU HAMLE KAYDI ---\n\n";
+  let txt = "ABLUKA OPERASYON KAYDI\n\n";
   Array.from(document.querySelectorAll(".notation-item")).reverse().forEach((it, idx) => { txt += `${idx + 1}. ${it.innerText}\n`; });
   const b = new Blob([txt], { type: "text/plain" });
   const u = URL.createObjectURL(b);
-  const a = document.createElement("a"); a.href = u; a.download = "notasyon.txt"; a.click();
+  const a = document.createElement("a"); a.href = u; a.download = "abluka_log.txt"; a.click();
 }
 </script>
 </body>
