@@ -3,91 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Abluka Oyunu - Geliştirilmiş</title>
+<title>Abluka Oyunu - Notasyonlu</title>
 <style>
   body {
-    font-family: Arial, sans-serif;
-    background: #2b2b2b;
-    color: white;
-    text-align: center;
-    margin: 0;
-    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #2b2b2b; color: white; text-align: center; margin: 0; padding: 20px;
+    display: flex; flex-direction: column; align-items: center;
   }
 
-  h1 { margin-top: 10px; font-size: 2em; color: #f0f0f0; }
-
-  #status {
-    margin: 15px;
-    font-size: 18px;
-    font-weight: bold;
-    min-height: 25px;
-    color: #ffd700;
-  }
+  .game-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
 
   #board {
-    display: grid;
-    grid-template-columns: repeat(7, 65px);
-    gap: 6px;
-    justify-content: center;
-    margin-bottom: 20px;
+    display: grid; grid-template-columns: repeat(7, 60px); gap: 6px;
+    background: #444; padding: 10px; border-radius: 10px;
   }
 
-  @media (max-width: 500px) {
-    #board { grid-template-columns: repeat(7, 12vw); gap: 4px; }
-    .cell { width: 12vw !important; height: 12vw !important; }
-    .piece { width: 9vw !important; height: 9vw !important; }
+  .notation-panel {
+    width: 200px; height: 460px; background: #1a1a1a; border-radius: 10px;
+    padding: 10px; display: flex; flex-direction: column; text-align: left;
   }
+
+  #notationList {
+    flex-grow: 1; overflow-y: auto; font-family: monospace; font-size: 14px;
+    color: #ccc; list-style: none; padding: 0; margin-top: 10px; border-top: 1px solid #333;
+  }
+
+  .notation-item { padding: 4px 0; border-bottom: 1px solid #222; }
 
   .cell {
-    width: 65px; height: 65px;
-    background: linear-gradient(145deg, #deb887, #c79a6b);
-    border-radius: 8px;
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.5), inset 1px 1px 3px rgba(255,255,255,0.2);
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform 0.2s; position: relative;
+    width: 60px; height: 60px; background: linear-gradient(145deg, #deb887, #c79a6b);
+    border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    position: relative; transition: 0.2s;
   }
 
-  .cell:hover { transform: translateY(-2px); }
-
-  .blocked {
-    background: #d32f2f !important;
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.6), inset 0px 0px 5px rgba(255,255,255,0.2);
-    cursor: not-allowed;
+  /* Koordinat Etiketleri */
+  .cell::before {
+    content: attr(data-coord); position: absolute; bottom: 2px; right: 2px;
+    font-size: 9px; color: rgba(0,0,0,0.3); font-weight: bold;
   }
 
-  .piece {
-    width: 48px; height: 48px; border-radius: 8px;
-    box-shadow: 1px 1px 4px rgba(0,0,0,0.7);
-    transition: transform 0.3s;
-  }
+  .blocked { background: #d32f2f !important; }
+  .piece { width: 45px; height: 45px; border-radius: 8px; box-shadow: 1px 1px 5px black; }
+  .black { background: #000; }
+  .white { background: #fff; border: 1px solid #ccc; }
+  .glow { box-shadow: 0 0 15px 5px yellow; transform: scale(1.05); }
 
-  .black { background-color: black; }
-  .white { background-color: white; border: 1px solid #ccc; }
-
-  .glow { box-shadow: 0 0 15px 5px yellow; transform: scale(1.1); }
-
-  .controls { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
-
-  .btn {
-    border: none; padding: 12px 25px; font-size: 16px;
-    border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s;
-  }
-
-  .btn-reset { background: #e67e22; color: white; }
-  .btn-reset:hover { background: #d35400; }
-
+  .controls { margin-top: 20px; display: flex; gap: 10px; }
+  .btn { border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
   .btn-undo { background: #3498db; color: white; }
-  .btn-undo:hover { background: #2980b9; }
-  .btn-undo:disabled { background: #7f8c8d; cursor: not-allowed; }
-
+  .btn-reset { background: #e67e22; color: white; }
+  
+  @media (max-width: 600px) {
+    .game-container { flex-direction: column; align-items: center; }
+    .notation-panel { width: 90%; height: 150px; }
+  }
 </style>
 </head>
 <body>
 
 <h1>Abluka Oyunu</h1>
-<div id="status"></div>
-<div id="board"></div>
+<div id="status" style="margin-bottom: 15px; color: #ffd700; font-weight: bold;">Siyah - Taşını Oynat</div>
+
+<div class="game-container">
+  <div id="board"></div>
+  
+  <div class="notation-panel">
+    <strong>Hamle Kaydı</strong>
+    <ul id="notationList"></ul>
+  </div>
+</div>
 
 <div class="controls">
   <button class="btn btn-reset" onclick="init()">Yeniden Başlat</button>
@@ -96,92 +80,56 @@
 
 <script>
 const size = 7;
-let board = [];
-let currentPlayer = "black";
-let phase = "move"; 
-let gameOver = false;
-let history = []; // Hamle geçmişini tutacak dizi
+const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+let board = [], currentPlayer = "black", phase = "move", gameOver = false, history = [];
 
-let players = {
-  black: { x: 0, y: 3 },
-  white: { x: 6, y: 3 }
-};
+let players = { black: { x: 0, y: 3 }, white: { x: 6, y: 3 } };
 
-function saveState() {
-  // Mevcut durumu derin kopya (deep copy) yaparak kaydet
-  const state = {
-    board: board.map(row => [...row]),
-    currentPlayer: currentPlayer,
-    phase: phase,
-    players: JSON.parse(JSON.stringify(players)),
-    gameOver: gameOver
-  };
-  history.push(state);
-  updateUndoButton();
+function getCoord(x, y) {
+  // x satır, y sütun. Satrançta aşağıdan yukarı sayıldığı için 7-x yapıyoruz.
+  return cols[y] + (size - x);
 }
 
-function undo() {
-  if (history.length === 0 || gameOver) return;
-  
-  const prevState = history.pop();
-  board = prevState.board;
-  currentPlayer = prevState.currentPlayer;
-  phase = prevState.phase;
-  players = prevState.players;
-  gameOver = prevState.gameOver;
-  
-  render();
-  updateStatus();
-  updateUndoButton();
-}
-
-function updateUndoButton() {
-  document.getElementById("undoBtn").disabled = history.length === 0 || gameOver;
+function addNotation(text) {
+  const list = document.getElementById("notationList");
+  const li = document.createElement("li");
+  li.className = "notation-item";
+  const turn = Math.floor(history.length / 2) + 1;
+  li.innerText = `${text}`;
+  list.prepend(li); // En son hamleyi en üstte göster
 }
 
 function init() {
   board = Array(size).fill().map(() => Array(size).fill("empty"));
-  currentPlayer = "black";
-  phase = "move";
-  gameOver = false;
-  history = [];
-  
-  players.black = { x: 0, y: 3 };
-  players.white = { x: 6, y: 3 };
-  
-  board[players.black.x][players.black.y] = "black";
-  board[players.white.x][players.white.y] = "white";
-  
+  currentPlayer = "black"; phase = "move"; gameOver = false; history = [];
+  players.black = { x: 0, y: 3 }; players.white = { x: 6, y: 3 };
+  board[0][3] = "black"; board[6][3] = "white";
+  document.getElementById("notationList").innerHTML = "";
   render();
   updateStatus();
-  updateUndoButton();
 }
 
 function render() {
   const boardDiv = document.getElementById("board");
   boardDiv.innerHTML = "";
-
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
       const cell = document.createElement("div");
       cell.className = "cell";
-
+      cell.setAttribute("data-coord", getCoord(i, j));
+      
       const pCurrent = players[currentPlayer];
       const isNearby = Math.abs(pCurrent.x - i) <= 1 && Math.abs(pCurrent.y - j) <= 1;
 
       if (board[i][j] === "blocked") cell.classList.add("blocked");
-
       if (board[i][j] === "black" || board[i][j] === "white") {
         const p = document.createElement("div");
         p.className = `piece ${board[i][j]}`;
         if (!gameOver && board[i][j] === currentPlayer) p.classList.add("glow");
         cell.appendChild(p);
-      } 
-      else if (!gameOver && phase === "move" && isNearby && board[i][j] === "empty") {
-        cell.style.boxShadow = "inset 0 0 15px gold";
-        cell.style.border = "1px solid gold";
+      } else if (!gameOver && phase === "move" && isNearby) {
+        cell.style.boxShadow = "inset 0 0 10px gold";
       }
-
       cell.onclick = () => handleClick(i, j);
       boardDiv.appendChild(cell);
     }
@@ -197,12 +145,17 @@ function handleClick(x, y) {
 function movePiece(x, y) {
   const p = players[currentPlayer];
   if (board[x][y] !== "empty") return;
-
   if (Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1) {
-    saveState(); // Hareket etmeden önce durumu kaydet
+    const fromCoord = getCoord(p.x, p.y);
+    const toCoord = getCoord(x, y);
+    
+    saveState();
     board[p.x][p.y] = "empty";
     board[x][y] = currentPlayer;
     players[currentPlayer] = { x, y };
+    
+    addNotation(`${currentPlayer === 'black' ? 'S' : 'B'}: ${fromCoord}→${toCoord}`);
+    
     phase = "block";
     render();
     updateStatus();
@@ -211,21 +164,29 @@ function movePiece(x, y) {
 
 function blockCell(x, y) {
   if (board[x][y] !== "empty") return;
-
-  saveState(); // Blok koymadan önce durumu kaydet
+  saveState();
   board[x][y] = "blocked";
+  addNotation(`${currentPlayer === 'black' ? 'S' : 'B'}: #${getCoord(x, y)}`);
   
   render();
-
-  if (checkWin()) {
-    gameOver = true;
-    render();
-    updateUndoButton();
-    return;
-  }
-
+  if (checkWin()) { gameOver = true; render(); return; }
+  
   phase = "move";
   currentPlayer = (currentPlayer === "black") ? "white" : "black";
+  render();
+  updateStatus();
+}
+
+function saveState() {
+  history.push(JSON.parse(JSON.stringify({ board, currentPlayer, phase, players, gameOver })));
+}
+
+function undo() {
+  if (history.length === 0 || gameOver) return;
+  const prevState = history.pop();
+  board = prevState.board; currentPlayer = prevState.currentPlayer;
+  phase = prevState.phase; players = prevState.players; gameOver = prevState.gameOver;
+  document.getElementById("notationList").removeChild(document.getElementById("notationList").firstChild);
   render();
   updateStatus();
 }
@@ -233,37 +194,24 @@ function blockCell(x, y) {
 function checkWin() {
   const opponent = (currentPlayer === "black") ? "white" : "black";
   const p = players[opponent];
-  let canMove = false;
-
   for (let dx = -1; dx <= 1; dx++) {
     for (let dy = -1; dy <= 1; dy++) {
       if (dx === 0 && dy === 0) continue;
-      let nx = p.x + dx;
-      let ny = p.y + dy;
-      if (nx >= 0 && ny >= 0 && nx < size && ny < size && board[nx][ny] === "empty") {
-        canMove = true;
-      }
+      let nx = p.x + dx, ny = p.y + dy;
+      if (nx >= 0 && ny >= 0 && nx < size && ny < size && board[nx][ny] === "empty") return false;
     }
   }
-
-  if (!canMove) {
-    document.getElementById("status").innerText = 
-      "OYUN BİTTİ! " + (currentPlayer === "black" ? "Siyah" : "Beyaz") + " kazandı!";
-    document.getElementById("status").style.color = "#2ecc71";
-    return true;
-  }
-  return false;
+  document.getElementById("status").innerText = "KAZANAN: " + (currentPlayer === "black" ? "Siyah" : "Beyaz");
+  return true;
 }
 
 function updateStatus() {
-  const turnText = (currentPlayer === "black" ? "Siyah" : "Beyaz");
-  const actionText = (phase === "move" ? "Taşını Oynat" : "Blok Koy!");
-  document.getElementById("status").innerText = `${turnText} - ${actionText}`;
-  document.getElementById("status").style.color = "#ffd700";
+  const turn = (currentPlayer === "black" ? "Siyah" : "Beyaz");
+  const action = (phase === "move" ? "Taşını Oynat" : "Blok Koy!");
+  document.getElementById("status").innerText = `${turn} - ${action}`;
 }
 
 init();
 </script>
-
 </body>
 </html>
