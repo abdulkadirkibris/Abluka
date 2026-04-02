@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Küre Oyunu - Strateji</title>
+<title>Küre Oyunu - 7x7 Edition</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -24,35 +24,38 @@
   }
 
   .board-outer {
-    background: #3d3d3d; padding: 15px; border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 450px;
+    background: #3d3d3d; padding: 10px; border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 550px;
   }
 
   #board {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    display: grid; 
+    grid-template-columns: repeat(7, 1fr); /* 7 Sütun */
+    gap: 6px;
     background: #1a1a1a; padding: 10px; border-radius: 8px;
   }
 
   .cell {
     aspect-ratio: 1 / 1; background: #444; border-radius: 50%;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: 0.3s; border: 2px solid transparent;
+    transition: 0.2s; border: 2px solid transparent;
   }
 
   .cell:hover { background: #555; }
 
   .sphere {
     width: 85%; height: 85%; border-radius: 50%;
-    box-shadow: inset -5px -5px 15px rgba(0,0,0,0.5), 2px 5px 10px rgba(0,0,0,0.3);
+    box-shadow: inset -4px -4px 10px rgba(0,0,0,0.5), 2px 4px 8px rgba(0,0,0,0.3);
   }
 
-  .blue { background: radial-gradient(circle at 30% 30%, #4facfe, #00f2fe); }
-  .red { background: radial-gradient(circle at 30% 30%, #f093fb, #f5576c); }
+  /* Yeni Renkler: Mor ve Turuncu */
+  .purple { background: radial-gradient(circle at 30% 30%, #a18cd1, #800080); }
+  .orange { background: radial-gradient(circle at 30% 30%, #ff9a9e, #f6d365); }
   
-  .selected { border: 3px solid #ffd700; transform: scale(1.1); }
-  .valid-move { background: rgba(255, 215, 0, 0.2) !important; border: 1px dashed #ffd700; }
+  .selected { border: 3px solid #ffd700; transform: scale(1.1); z-index: 2; }
+  .valid-move { background: rgba(255, 215, 0, 0.15) !important; border: 1px dashed #ffd700; }
 
-  #status { margin-bottom: 10px; color: #ffd700; font-size: 1.2em; height: 30px; font-weight: bold; }
+  #status { margin-bottom: 15px; color: #ffd700; font-size: 1.2em; height: 30px; font-weight: bold; }
 
   .rules-panel {
     width: 250px; background: #1a1a1a; border-radius: 10px;
@@ -60,27 +63,27 @@
   }
 
   .rules-panel h3 { color: #ffd700; margin-top: 0; }
-  .rules-panel ul { padding-left: 18px; color: #ccc; }
+  .rules-panel ul { padding-left: 18px; color: #ccc; line-height: 1.6; }
 
-  .controls { margin-top: 20px; }
   .btn {
     border: none; padding: 12px 25px; border-radius: 5px;
-    cursor: pointer; font-weight: bold; background: #e67e22; color: white;
+    cursor: pointer; font-weight: bold; background: #e67e22; color: white; transition: 0.2s;
   }
+  .btn:hover { background: #d35400; }
 
   @media (max-width: 600px) {
     .game-container { flex-direction: column; align-items: center; }
-    .rules-panel { width: 100%; max-width: 450px; }
+    .rules-panel { width: 100%; max-width: 550px; }
   }
 </style>
 </head>
 <body>
 
 <div class="header-container">
-  <h1>Küre Oyunu</h1>
+  <h1>Küre Oyunu (7x7)</h1>
 </div>
 
-<div id="status">Mavi Oyuncu Başlar</div>
+<div id="status">Mor Oyuncu Başlar</div>
 
 <div class="game-container">
   <div class="board-outer">
@@ -88,36 +91,39 @@
   </div>
 
   <div class="rules-panel">
-    <h3>Kurallar</h3>
+    <h3>Nasıl Oynanır?</h3>
     <ul>
-      <li>Mavi küreler aşağı, Kırmızı küreler yukarı ilerler.</li>
-      <li>Her hamlede 1 kare ileri veya çapraz gidebilirsin.</li>
-      <li>Rakip kürenin üzerinden atlayamazsın.</li>
-      <li><b>Hedef:</b> Bir küreni karşı sıraya ulaştırmak!</li>
+      <li><b>Mor:</b> Yukarıdan aşağıya ilerler.</li>
+      <li><b>Turuncu:</b> Aşağıdan yukarıya ilerler.</li>
+      <li>Hamle: 1 kare ileri veya çapraz-ileri.</li>
+      <li><b>Kazanma:</b> Herhangi bir küreni rakibin en dipteki başlangıç satırına ulaştır!</li>
     </ul>
-    <button class="btn" style="width:100%; margin-top:10px;" onclick="init()">Oyunu Sıfırla</button>
+    <button class="btn" style="width:100%; margin-top:10px;" onclick="init()">Yeniden Başlat</button>
+    <a href="index.html" class="btn" style="width:100%; margin-top:10px; display:block; text-align:center; text-decoration:none; background:#3498db;">Ana Sayfaya Dön</a>
   </div>
 </div>
 
 <script>
-const size = 4;
+const size = 7; // Tahta boyutu 7x7
 let board = [];
-let currentPlayer = "blue"; 
+let currentPlayer = "purple"; 
 let selectedCell = null;
 let gameOver = false;
 
 function init() {
   board = Array(size).fill(null).map(() => Array(size).fill(null));
-  // Mavi küreler en üst sıraya (0)
-  for(let j=0; j<size; j++) board[0][j] = "blue";
-  // Kırmızı küreler en alt sıraya (3)
-  for(let j=0; j<size; j++) board[size-1][j] = "red";
   
-  currentPlayer = "blue";
+  // Mor küreler en üst sıraya (0)
+  for(let j=0; j<size; j++) board[0][j] = "purple";
+  
+  // Turuncu küreler en alt sıraya (6)
+  for(let j=0; j<size; j++) board[size-1][j] = "orange";
+  
+  currentPlayer = "purple";
   selectedCell = null;
   gameOver = false;
-  document.getElementById("status").innerText = "Mavi Oyuncu Başlar";
-  document.getElementById("status").style.color = "#4facfe";
+  document.getElementById("status").innerText = "Mor Oyuncu Başlar";
+  document.getElementById("status").style.color = "#a18cd1";
   render();
 }
 
@@ -140,7 +146,6 @@ function render() {
         cell.classList.add("selected");
       }
 
-      // Geçerli hamleleri görselleştir
       if (selectedCell && isValidMove(selectedCell.r, selectedCell.c, r, c)) {
         cell.classList.add("valid-move");
       }
@@ -172,10 +177,10 @@ function isValidMove(fromR, fromC, toR, toC) {
   const rowDiff = toR - fromR;
   const colDiff = Math.abs(toC - fromC);
 
-  // Mavi aşağı (row artar), Kırmızı yukarı (row azalır) gider
-  const direction = (currentPlayer === "blue") ? 1 : -1;
+  // Mor aşağı (row+), Turuncu yukarı (row-)
+  const direction = (currentPlayer === "purple") ? 1 : -1;
 
-  // Sadece 1 kare ileri veya 1 kare çapraz ileri
+  // 1 kare ileri veya 1 kare çapraz-ileri (colDiff 0 veya 1)
   return rowDiff === direction && colDiff <= 1;
 }
 
@@ -183,17 +188,18 @@ function moveSphere(fromR, fromC, toR, toC) {
   board[toR][toC] = currentPlayer;
   board[fromR][fromC] = null;
   
-  // Galibiyet kontrolü
-  if ((currentPlayer === "blue" && toR === size - 1) || 
-      (currentPlayer === "red" && toR === 0)) {
-    document.getElementById("status").innerText = `TEBRİKLER! ${currentPlayer === "blue" ? "Mavi" : "Kırmızı"} KAZANDI!`;
+  // Hedef satıra ulaştı mı?
+  if ((currentPlayer === "purple" && toR === size - 1) || 
+      (currentPlayer === "orange" && toR === 0)) {
+    const winnerName = (currentPlayer === "purple" ? "Mor" : "Turuncu");
+    document.getElementById("status").innerText = `OYUN BİTTİ: ${winnerName} KAZANDI!`;
     document.getElementById("status").style.color = "#2ecc71";
     gameOver = true;
     render();
     return;
   }
 
-  currentPlayer = (currentPlayer === "blue") ? "red" : "blue";
+  currentPlayer = (currentPlayer === "purple") ? "orange" : "purple";
   selectedCell = null;
   updateStatus();
   render();
@@ -201,8 +207,8 @@ function moveSphere(fromR, fromC, toR, toC) {
 
 function updateStatus() {
   const status = document.getElementById("status");
-  status.innerText = `${currentPlayer === "blue" ? "Mavi" : "Kırmızı"} Oyuncunun Sırası`;
-  status.style.color = (currentPlayer === "blue") ? "#4facfe" : "#f093fb";
+  status.innerText = `${currentPlayer === "purple" ? "Mor" : "Turuncu"} Oyuncunun Sırası`;
+  status.style.color = (currentPlayer === "purple") ? "#a18cd1" : "#f6d365";
 }
 
 init();
