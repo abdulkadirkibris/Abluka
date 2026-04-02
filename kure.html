@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Küre Oyunu - Strateji</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #2b2b2b; color: white; text-align: center; margin: 0; padding: 10px;
+  }
+
+  .header-container {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; margin: 10px 0 15px 0;
+  }
+
+  h1 { margin: 0; font-size: 32px; color: #ffd700; font-weight: bold; }
+
+  .game-container {
+    display: flex; flex-direction: row; justify-content: center;
+    align-items: flex-start; gap: 20px; flex-wrap: wrap;
+  }
+
+  .board-outer {
+    background: #3d3d3d; padding: 15px; border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 450px;
+  }
+
+  #board {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    background: #1a1a1a; padding: 10px; border-radius: 8px;
+  }
+
+  .cell {
+    aspect-ratio: 1 / 1; background: #444; border-radius: 50%;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: 0.3s; border: 2px solid transparent;
+  }
+
+  .cell:hover { background: #555; }
+
+  .sphere {
+    width: 85%; height: 85%; border-radius: 50%;
+    box-shadow: inset -5px -5px 15px rgba(0,0,0,0.5), 2px 5px 10px rgba(0,0,0,0.3);
+  }
+
+  .blue { background: radial-gradient(circle at 30% 30%, #4facfe, #00f2fe); }
+  .red { background: radial-gradient(circle at 30% 30%, #f093fb, #f5576c); }
+  
+  .selected { border: 3px solid #ffd700; transform: scale(1.1); }
+  .valid-move { background: rgba(255, 215, 0, 0.2) !important; border: 1px dashed #ffd700; }
+
+  #status { margin-bottom: 10px; color: #ffd700; font-size: 1.2em; height: 30px; font-weight: bold; }
+
+  .rules-panel {
+    width: 250px; background: #1a1a1a; border-radius: 10px;
+    padding: 15px; text-align: left; border: 1px solid #444; font-size: 14px;
+  }
+
+  .rules-panel h3 { color: #ffd700; margin-top: 0; }
+  .rules-panel ul { padding-left: 18px; color: #ccc; }
+
+  .controls { margin-top: 20px; }
+  .btn {
+    border: none; padding: 12px 25px; border-radius: 5px;
+    cursor: pointer; font-weight: bold; background: #e67e22; color: white;
+  }
+
+  @media (max-width: 600px) {
+    .game-container { flex-direction: column; align-items: center; }
+    .rules-panel { width: 100%; max-width: 450px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header-container">
+  <h1>Küre Oyunu</h1>
+</div>
+
+<div id="status">Mavi Oyuncu Başlar</div>
+
+<div class="game-container">
+  <div class="board-outer">
+    <div id="board"></div>
+  </div>
+
+  <div class="rules-panel">
+    <h3>Kurallar</h3>
+    <ul>
+      <li>Mavi küreler aşağı, Kırmızı küreler yukarı ilerler.</li>
+      <li>Her hamlede 1 kare ileri veya çapraz gidebilirsin.</li>
+      <li>Rakip kürenin üzerinden atlayamazsın.</li>
+      <li><b>Hedef:</b> Bir küreni karşı sıraya ulaştırmak!</li>
+    </ul>
+    <button class="btn" style="width:100%; margin-top:10px;" onclick="init()">Oyunu Sıfırla</button>
+  </div>
+</div>
+
+<script>
+const size = 4;
+let board = [];
+let currentPlayer = "blue"; 
+let selectedCell = null;
+let gameOver = false;
+
+function init() {
+  board = Array(size).fill(null).map(() => Array(size).fill(null));
+  // Mavi küreler en üst sıraya (0)
+  for(let j=0; j<size; j++) board[0][j] = "blue";
+  // Kırmızı küreler en alt sıraya (3)
+  for(let j=0; j<size; j++) board[size-1][j] = "red";
+  
+  currentPlayer = "blue";
+  selectedCell = null;
+  gameOver = false;
+  document.getElementById("status").innerText = "Mavi Oyuncu Başlar";
+  document.getElementById("status").style.color = "#4facfe";
+  render();
+}
+
+function render() {
+  const boardDiv = document.getElementById("board");
+  boardDiv.innerHTML = "";
+
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      
+      if (board[r][c]) {
+        const sphere = document.createElement("div");
+        sphere.className = `sphere ${board[r][c]}`;
+        cell.appendChild(sphere);
+      }
+
+      if (selectedCell && selectedCell.r === r && selectedCell.c === c) {
+        cell.classList.add("selected");
+      }
+
+      // Geçerli hamleleri görselleştir
+      if (selectedCell && isValidMove(selectedCell.r, selectedCell.c, r, c)) {
+        cell.classList.add("valid-move");
+      }
+
+      cell.onclick = () => handleClick(r, c);
+      boardDiv.appendChild(cell);
+    }
+  }
+}
+
+function handleClick(r, c) {
+  if (gameOver) return;
+
+  if (board[r][c] === currentPlayer) {
+    selectedCell = {r, c};
+  } else if (selectedCell) {
+    if (isValidMove(selectedCell.r, selectedCell.c, r, c)) {
+      moveSphere(selectedCell.r, selectedCell.c, r, c);
+      return;
+    }
+    selectedCell = null;
+  }
+  render();
+}
+
+function isValidMove(fromR, fromC, toR, toC) {
+  if (board[toR][toC] !== null) return false;
+
+  const rowDiff = toR - fromR;
+  const colDiff = Math.abs(toC - fromC);
+
+  // Mavi aşağı (row artar), Kırmızı yukarı (row azalır) gider
+  const direction = (currentPlayer === "blue") ? 1 : -1;
+
+  // Sadece 1 kare ileri veya 1 kare çapraz ileri
+  return rowDiff === direction && colDiff <= 1;
+}
+
+function moveSphere(fromR, fromC, toR, toC) {
+  board[toR][toC] = currentPlayer;
+  board[fromR][fromC] = null;
+  
+  // Galibiyet kontrolü
+  if ((currentPlayer === "blue" && toR === size - 1) || 
+      (currentPlayer === "red" && toR === 0)) {
+    document.getElementById("status").innerText = `TEBRİKLER! ${currentPlayer === "blue" ? "Mavi" : "Kırmızı"} KAZANDI!`;
+    document.getElementById("status").style.color = "#2ecc71";
+    gameOver = true;
+    render();
+    return;
+  }
+
+  currentPlayer = (currentPlayer === "blue") ? "red" : "blue";
+  selectedCell = null;
+  updateStatus();
+  render();
+}
+
+function updateStatus() {
+  const status = document.getElementById("status");
+  status.innerText = `${currentPlayer === "blue" ? "Mavi" : "Kırmızı"} Oyuncunun Sırası`;
+  status.style.color = (currentPlayer === "blue") ? "#4facfe" : "#f093fb";
+}
+
+init();
+</script>
+</body>
+</html>
