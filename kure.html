@@ -56,7 +56,7 @@
 <script>
 const size = 7;
 let board = [];
-let currentPlayer = "purple"; // Her zaman Mor başlar 
+let currentPlayer = "purple"; 
 let selected = null;
 let captured = { purple: 0, orange: 0 };
 let gameOver = false;
@@ -64,13 +64,134 @@ let gameOver = false;
 function init() {
     board = Array(size).fill(null).map(() => Array(size).fill(null));
     for(let j=0; j<size; j++) {
-        board[0][j] = "purple";   // Mor başlangıç sırası [cite: 9]
-        board[size-1][j] = "orange"; // Turuncu başlangıç sırası [cite: 9]
+        board[0][j] = "purple";   
+        board[size-1][j] = "orange"; 
     }
     currentPlayer = "purple";
     captured = { purple: 0, orange: 0 };
-    selected = null; gameOver = false;
+    selected = null; 
+    gameOver = false;
+    render();
     updateUI();
+}
+
+function handleClick(r, c) {
+    if(gameOver) return;
+    
+    // Taş seçimi
+    if(board[r][c] === currentPlayer) {
+        selected = {r, c};
+        render();
+    } 
+    // Hamle yapma
+    else if(selected) {
+        const fromR = selected.r;
+        const fromC = selected.c;
+        
+        if(tryMove(fromR, fromC, r, c)) {
+            // 1. Önce kural dışı durum (Dörtlü) kontrolü yapılır 
+            if(hasLineOfFour(currentPlayer)) {
+                alert("Kural İhlali: Taşlarınız herhangi bir doğrultuda dörtlü olamaz! (Madde 8) [cite: 15]");
+                // Hamleyi geri al
+                board[fromR][fromC] = currentPlayer;
+                board[r][c] = null;
+                selected = null;
+                render();
+                return;
+            }
+
+            // 2. Sıkıştırma kontrolü (Taş alma zorunludur) [cite: 17]
+            checkCaptures(r, c);
+            
+            // 3. Kazanma kontrolü (4 taş alan kazanır) [cite: 20]
+            if(captured[currentPlayer] >= 4) {
+                gameOver = true;
+                document.getElementById("status").innerText = "KAZANAN: " + (currentPlayer === "purple" ? "MOR" : "TURUNCU");
+            } else {
+                currentPlayer = currentPlayer === "purple" ? "orange" : "purple";
+                selected = null;
+            }
+            updateUI();
+        }
+    }
+}
+
+function tryMove(fR, fC, tR, tC) {
+    if(board[tR][tC] !== null) return false;
+    
+    const dr = tR - fR;
+    const dc = tC - fC;
+    const isStartRow = (currentPlayer === "purple" && fR === 0) || (currentPlayer === "orange" && fR === size-1);
+
+    // Yatay hareket yapılamaz [cite: 13]
+    if(dr === 0) return false; 
+
+    if(isStartRow) {
+        // Başlangıç sırasındaki taşlar sadece ileri veya çapraz-ileri bir birim [cite: 11]
+        const forward = (currentPlayer === "purple") ? 1 : -1;
+        if(dr !== forward || Math.abs(dc) > 1) return false;
+    } else {
+        // Başlangıç sırasından ayrılan taşlar ileri, geri veya çapraz bir birim [cite: 13]
+        if(Math.abs(dr) > 1 || Math.abs(dc) > 1) return false;
+        // Başlangıç sırasına geri dönülemez [cite: 12]
+        if((currentPlayer === "purple" && tR === 0) || (currentPlayer === "orange" && tR === size-1)) return false;
+    }
+
+    // Rakibin başlangıç sırasında aynı anda yalnızca bir taş bulundurulabilir [cite: 20]
+    const oppStartRow = (currentPlayer === "purple") ? size-1 : 0;
+    if(tR === oppStartRow) {
+        let count = 0;
+        for(let j=0; j<size; j++) if(board[oppStartRow][j] === currentPlayer) count++;
+        if(count >= 1) return false;
+    }
+
+    board[tR][tC] = currentPlayer;
+    board[fR][fC] = null;
+    return true;
+}
+
+function hasLineOfFour(p) {
+    // Madde 8: Dikey, yatay veya çapraz dörtlü olamaz [cite: 15]
+    // Taşların aralıklı olması veya arada rakip taş olması durumu değiştirmez [cite: 16]
+    
+    const directions = [[0,1], [1,0], [1,1], [1,-1]];
+    
+    for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+            for (let [dr, dc] of directions) {
+                let count = 0;
+                // Hat boyunca (7 kare) o yöndeki tüm kendi taşlarını say
+                for (let i = -6; i <= 6; i++) {
+                    let nr = r + i * dr;
+                    let nc = c + i * dc;
+                    if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                        if (board[nr][nc] === p) count++;
+                    }
+                }
+                if (count >= 4) return true;
+                count = 0; // Bir sonraki yön/başlangıç için sıfırla
+            }
+        }
+    }
+    return false;
+}
+
+function checkCaptures(r, c) {
+    const directions = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,-1],[1,-1],[-1,1]];
+    const opponent = currentPlayer === "purple" ? "orange" : "purple";
+
+    directions.forEach(([dr, dc]) => {
+        const nr1 = r + dr, nc1 = c + dc;
+        const nr2 = r + 2*dr, nc2 = c + 2*dc;
+
+        // Kendi - Rakip - Kendi sıkıştırması [cite: 17, 19]
+        if(nr2 >= 0 && nr2 < size && nc2 >= 0 && nc2 < size) {
+            if(board[nr1][nc1] === opponent && board[nr2][nc2] === currentPlayer) {
+                board[nr1][nc1] = null; 
+                captured[currentPlayer]++;
+            }
+        }
+    });
 }
 
 function render() {
@@ -91,109 +212,6 @@ function render() {
         }
     }
 }
-
-function handleClick(r, c) {
-    if(gameOver) return;
-    if(board[r][c] === currentPlayer) {
-        selected = {r, c};
-    } else if(selected) {
-        if(tryMove(selected.r, selected.c, r, c)) {
-            checkCaptures(r, c);
-            if(checkFourInARow()) return; // Dörtlü yasağı kontrolü [cite: 15, 26]
-            if(captured[currentPlayer] >= 4) { // 4 taş alan kazanır 
-                gameOver = true;
-                document.getElementById("status").innerText = "KAZANAN: " + (currentPlayer === "purple" ? "MOR" : "TURUNCU");
-            } else {
-                currentPlayer = currentPlayer === "purple" ? "orange" : "purple";
-                selected = null;
-            }
-        }
-    }
-    updateUI();
-}
-
-function tryMove(fR, fC, tR, tC) {
-    if(board[tR][tC] !== null) return false;
-    
-    const dr = tR - fR;
-    const dc = tC - fC;
-    const isStartRow = (currentPlayer === "purple" && fR === 0) || (currentPlayer === "orange" && fR === size-1);
-
-    // Yatay hareket yasaktır 
-    if(dr === 0) return false; 
-
-    // Başlangıç sırasındaki taşlar sadece ileri veya çapraz-ileri [cite: 11]
-    if(isStartRow) {
-        const forward = (currentPlayer === "purple") ? 1 : -1;
-        if(dr !== forward || Math.abs(dc) > 1) return false;
-    } else {
-        // Diğerleri ileri, geri, çapraz (Yatay hariç) 
-        if(Math.abs(dr) > 1 || Math.abs(dc) > 1) return false;
-        // Başlangıç sırasına geri dönülemez [cite: 12]
-        if((currentPlayer === "purple" && tR === 0) || (currentPlayer === "orange" && tR === size-1)) return false;
-    }
-
-    // Rakip başlangıç sırasında aynı anda en fazla 1 taş olabilir 
-    const oppStartRow = (currentPlayer === "purple") ? size-1 : 0;
-    if(tR === oppStartRow) {
-        let count = 0;
-        for(let j=0; j<size; j++) if(board[oppStartRow][j] === currentPlayer) count++;
-        if(count >= 1) return false;
-    }
-
-    board[tR][tC] = currentPlayer;
-    board[fR][fC] = null;
-    return true;
-}
-
-function checkCaptures(r, c) {
-    const directions = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,-1],[1,-1],[-1,1]];
-    const opponent = currentPlayer === "purple" ? "orange" : "purple";
-
-    directions.forEach(([dr, dc]) => {
-        const nr1 = r + dr, nc1 = c + dc;
-        const nr2 = r + 2*dr, nc2 = c + 2*dc;
-
-        // Sandviç kontrolü: Kendi - Rakip - Kendi [cite: 17]
-        if(isInside(nr2, nc2)) {
-            if(board[nr1][nc1] === opponent && board[nr2][nc2] === currentPlayer) {
-                board[nr1][nc1] = null; // Sıkıştırılan taş alınır [cite: 17]
-                captured[currentPlayer]++;
-            }
-        }
-    });
-}
-
-function checkFourInARow() {
-    // Dikey, yatay veya çapraz dörtlü olamaz [cite: 15]
-    // Bu basit versiyonda hamleyi yapanın dörtlü yapıp yapmadığını kontrol eder
-    if(hasLineOfFour(currentPlayer)) {
-        alert("Kural İhlali: Dörtlü dizilim yasaktır! [cite: 15, 26]");
-        init(); // Basitleştirmek için oyunu sıfırlıyoruz, turnuvada hamle geri alınır [cite: 26]
-        return true;
-    }
-    return false;
-}
-
-function hasLineOfFour(p) {
-    // Tüm tahtada tarama (Aralıklı veya rakip taşlı dizilimler de dahil [cite: 16])
-    const checkDir = (r, c, dr, dc) => {
-        let count = 0;
-        for(let i=0; i<size; i++) {
-            let nr = r + i*dr, nc = c + i*dc;
-            if(isInside(nr, nc) && board[nr][nc] === p) count++;
-        }
-        return count >= 4;
-    };
-    for(let i=0; i<size; i++) {
-        if(checkDir(i, 0, 0, 1)) return true; // Yatay
-        if(checkDir(0, i, 1, 0)) return true; // Dikey
-    }
-    if(checkDir(0,0,1,1) || checkDir(0,size-1,1,-1)) return true; // Çaprazlar
-    return false;
-}
-
-function isInside(r, c) { return r>=0 && r<size && c>=0 && c<size; }
 
 function updateUI() {
     render();
