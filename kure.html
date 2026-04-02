@@ -2,229 +2,252 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Küre - TAZOF Resmi Kurallar</title>
+<title>Küre Oyunu (Final)</title>
+
 <style>
-  * { box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #2b2b2b; color: white; text-align: center; margin: 0; padding: 10px; }
-  .header-container { margin: 10px 0; }
-  h1 { color: #ffd700; margin: 0; font-size: 28px; }
-  
-  .game-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
-  .board-outer { background: #3d3d3d; padding: 10px; border-radius: 12px; width: 100%; max-width: 500px; }
-  #board { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; background: #1a1a1a; padding: 10px; border-radius: 8px; }
-  
-  .cell { aspect-ratio: 1/1; background: #444; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; border: 2px solid transparent; }
-  .sphere { width: 85%; height: 85%; border-radius: 50%; transition: 0.2s; box-shadow: inset -3px -3px 8px rgba(0,0,0,0.5); }
-  
-  .purple { background: radial-gradient(circle at 30% 30%, #a18cd1, #800080); }
-  .orange { background: radial-gradient(circle at 30% 30%, #ff9a9e, #f6d365); }
-  
-  .selected { border-color: #ffd700; background: #555; }
-  .valid { background: rgba(46, 204, 113, 0.2) !important; }
-  
-  #status { font-weight: bold; font-size: 1.1em; color: #ffd700; margin-bottom: 10px; height: 25px; }
-  .score-panel { background: #1a1a1a; padding: 15px; border-radius: 10px; border: 1px solid #444; width: 220px; text-align: left; }
-  .score-item { margin-bottom: 10px; font-size: 14px; }
-  .captured-count { font-size: 24px; font-weight: bold; display: block; margin-top: 5px; }
-  
-  .btn { border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; background: #e67e22; color: white; }
+body {
+    font-family: Arial;
+    text-align: center;
+    background: #eef2f3;
+}
+
+h1 { margin-top: 20px; }
+
+#turn {
+    font-size: 20px;
+    margin: 10px;
+}
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(7, 70px);
+    gap: 6px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.cell {
+    width: 70px;
+    height: 70px;
+    background: #dcdcdc;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.cell:hover { background: #cfcfcf; }
+
+.piece {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+}
+
+.purple { background: purple; }
+.orange { background: orange; }
+
+.selected {
+    outline: 4px solid black;
+}
 </style>
 </head>
+
 <body>
 
-<div class="header-container">
-  <h1>KÜRE (TAZOF 2025)</h1>
-</div>
+<h1>Küre Oyunu (7x7)</h1>
+<div id="turn">Sıra: Mor</div>
 
-<div id="status">Mor Başlar</div>
-
-<div class="game-container">
-  <div class="board-outer">
-    <div id="board"></div>
-  </div>
-
-  <div class="score-panel">
-    <div class="score-item" style="color:#a18cd1">Mor Esir: <span id="pCaptured" class="captured-count">0</span></div>
-    <div class="score-item" style="color:#f6d365">Turuncu Esir: <span id="oCaptured" class="captured-count">0</span></div>
-    <hr style="border:0; border-top:1px solid #333">
-    <small style="color:#aaa">Hedef: 4 Esir </small>
-    <button class="btn" onclick="init()">Sıfırla</button>
-  </div>
-</div>
+<div id="board"></div>
 
 <script>
 const size = 7;
 let board = [];
-let currentPlayer = "purple"; 
 let selected = null;
-let captured = { purple: 0, orange: 0 };
-let gameOver = false;
+let currentPlayer = "purple";
 
-function init() {
-    board = Array(size).fill(null).map(() => Array(size).fill(null));
-    for(let j=0; j<size; j++) {
-        board[0][j] = "purple";   
-        board[size-1][j] = "orange"; 
+// Başlangıç
+function initBoard() {
+    board = Array.from({ length: size }, () => Array(size).fill(null));
+
+    for (let i = 0; i < size; i++) {
+        board[0][i] = "orange";
+        board[6][i] = "purple";
     }
-    currentPlayer = "purple";
-    captured = { purple: 0, orange: 0 };
-    selected = null; 
-    gameOver = false;
-    render();
-    updateUI();
 }
 
-function handleClick(r, c) {
-    if(gameOver) return;
-    
-    // Taş seçimi
-    if(board[r][c] === currentPlayer) {
-        selected = {r, c};
-        render();
-    } 
-    // Hamle yapma
-    else if(selected) {
-        const fromR = selected.r;
-        const fromC = selected.c;
-        
-        if(tryMove(fromR, fromC, r, c)) {
-            // 1. Önce kural dışı durum (Dörtlü) kontrolü yapılır 
-            if(hasLineOfFour(currentPlayer)) {
-                alert("Kural İhlali: Taşlarınız herhangi bir doğrultuda dörtlü olamaz! (Madde 8) [cite: 15]");
-                // Hamleyi geri al
-                board[fromR][fromC] = currentPlayer;
-                board[r][c] = null;
-                selected = null;
-                render();
-                return;
+// ❗ 4’lü kontrol (ARALIKLI DAHİL)
+function hasFour(player) {
+    const directions = [
+        [1,0], [0,1], [1,1], [1,-1]
+    ];
+
+    for (let x = 0; x < size; x++) {
+        for (let y = 0; y < size; y++) {
+
+            if (board[x][y] !== player) continue;
+
+            // 🔥 başlangıç satırı muaf
+            if (
+                (player === "orange" && x === 0) ||
+                (player === "purple" && x === size - 1)
+            ) {
+                continue;
             }
 
-            // 2. Sıkıştırma kontrolü (Taş alma zorunludur) [cite: 17]
-            checkCaptures(r, c);
-            
-            // 3. Kazanma kontrolü (4 taş alan kazanır) [cite: 20]
-            if(captured[currentPlayer] >= 4) {
-                gameOver = true;
-                document.getElementById("status").innerText = "KAZANAN: " + (currentPlayer === "purple" ? "MOR" : "TURUNCU");
-            } else {
-                currentPlayer = currentPlayer === "purple" ? "orange" : "purple";
-                selected = null;
-            }
-            updateUI();
-        }
-    }
-}
+            for (let [dx, dy] of directions) {
 
-function tryMove(fR, fC, tR, tC) {
-    if(board[tR][tC] !== null) return false;
-    
-    const dr = tR - fR;
-    const dc = tC - fC;
-    const isStartRow = (currentPlayer === "purple" && fR === 0) || (currentPlayer === "orange" && fR === size-1);
+                let count = 1;
 
-    // Yatay hareket yapılamaz [cite: 13]
-    if(dr === 0) return false; 
+                // ileri
+                let nx = x + dx;
+                let ny = y + dy;
 
-    if(isStartRow) {
-        // Başlangıç sırasındaki taşlar sadece ileri veya çapraz-ileri bir birim [cite: 11]
-        const forward = (currentPlayer === "purple") ? 1 : -1;
-        if(dr !== forward || Math.abs(dc) > 1) return false;
-    } else {
-        // Başlangıç sırasından ayrılan taşlar ileri, geri veya çapraz bir birim [cite: 13]
-        if(Math.abs(dr) > 1 || Math.abs(dc) > 1) return false;
-        // Başlangıç sırasına geri dönülemez [cite: 12]
-        if((currentPlayer === "purple" && tR === 0) || (currentPlayer === "orange" && tR === size-1)) return false;
-    }
-
-    // Rakibin başlangıç sırasında aynı anda yalnızca bir taş bulundurulabilir [cite: 20]
-    const oppStartRow = (currentPlayer === "purple") ? size-1 : 0;
-    if(tR === oppStartRow) {
-        let count = 0;
-        for(let j=0; j<size; j++) if(board[oppStartRow][j] === currentPlayer) count++;
-        if(count >= 1) return false;
-    }
-
-    board[tR][tC] = currentPlayer;
-    board[fR][fC] = null;
-    return true;
-}
-
-function hasLineOfFour(p) {
-    // Madde 8: Dikey, yatay veya çapraz dörtlü olamaz [cite: 15]
-    // Taşların aralıklı olması veya arada rakip taş olması durumu değiştirmez [cite: 16]
-    
-    const directions = [[0,1], [1,0], [1,1], [1,-1]];
-    
-    for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-            for (let [dr, dc] of directions) {
-                let count = 0;
-                // Hat boyunca (7 kare) o yöndeki tüm kendi taşlarını say
-                for (let i = -6; i <= 6; i++) {
-                    let nr = r + i * dr;
-                    let nc = c + i * dc;
-                    if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-                        if (board[nr][nc] === p) count++;
-                    }
+                while (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+                    if (board[nx][ny] === player) count++;
+                    nx += dx;
+                    ny += dy;
                 }
+
+                // geri
+                nx = x - dx;
+                ny = y - dy;
+
+                while (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+                    if (board[nx][ny] === player) count++;
+                    nx -= dx;
+                    ny -= dy;
+                }
+
                 if (count >= 4) return true;
-                count = 0; // Bir sonraki yön/başlangıç için sıfırla
             }
         }
     }
+
     return false;
 }
 
-function checkCaptures(r, c) {
-    const directions = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,-1],[1,-1],[-1,1]];
-    const opponent = currentPlayer === "purple" ? "orange" : "purple";
+// Taş alma
+function capture(x, y) {
+    const dirs = [
+        [1,0],[-1,0],[0,1],[0,-1],
+        [1,1],[-1,-1],[1,-1],[-1,1]
+    ];
 
-    directions.forEach(([dr, dc]) => {
-        const nr1 = r + dr, nc1 = c + dc;
-        const nr2 = r + 2*dr, nc2 = c + 2*dc;
+    dirs.forEach(([dx, dy]) => {
+        let x1 = x + dx;
+        let y1 = y + dy;
+        let x2 = x + 2*dx;
+        let y2 = y + 2*dy;
 
-        // Kendi - Rakip - Kendi sıkıştırması [cite: 17, 19]
-        if(nr2 >= 0 && nr2 < size && nc2 >= 0 && nc2 < size) {
-            if(board[nr1][nc1] === opponent && board[nr2][nc2] === currentPlayer) {
-                board[nr1][nc1] = null; 
-                captured[currentPlayer]++;
+        if (
+            x2 >= 0 && x2 < size &&
+            y2 >= 0 && y2 < size
+        ) {
+            if (
+                board[x1][y1] &&
+                board[x2][y2] === currentPlayer &&
+                board[x1][y1] !== currentPlayer
+            ) {
+                board[x1][y1] = null;
             }
         }
     });
 }
 
-function render() {
-    const bDiv = document.getElementById("board");
-    bDiv.innerHTML = "";
-    for(let r=0; r<size; r++) {
-        for(let c=0; c<size; c++) {
+// Hamle kontrolü
+function isValidMove(sx, sy, x, y) {
+    let dx = x - sx;
+    let dy = y - sy;
+
+    // ❌ yatay yasak
+    if (dx === 0 && dy !== 0) return false;
+
+    // ✅ 1 adım
+    if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
+        return true;
+    }
+
+    return false;
+}
+
+// Tahta çizimi
+function drawBoard() {
+    const div = document.getElementById("board");
+    div.innerHTML = "";
+
+    for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
             const cell = document.createElement("div");
-            cell.className = "cell";
-            if(board[r][c]) {
-                const s = document.createElement("div");
-                s.className = `sphere ${board[r][c]}`;
-                cell.appendChild(s);
+            cell.classList.add("cell");
+
+            if (selected && selected.x === i && selected.y === j) {
+                cell.classList.add("selected");
             }
-            if(selected && selected.r === r && selected.c === c) cell.classList.add("selected");
-            cell.onclick = () => handleClick(r, c);
-            bDiv.appendChild(cell);
+
+            if (board[i][j]) {
+                const piece = document.createElement("div");
+                piece.classList.add("piece", board[i][j]);
+                cell.appendChild(piece);
+            }
+
+            cell.onclick = () => handleClick(i, j);
+            div.appendChild(cell);
         }
     }
 }
 
-function updateUI() {
-    render();
-    document.getElementById("pCaptured").innerText = captured.purple;
-    document.getElementById("oCaptured").innerText = captured.orange;
-    if(!gameOver) {
-        const s = document.getElementById("status");
-        s.innerText = (currentPlayer === "purple" ? "Mor" : "Turuncu") + " Sırası";
-        s.style.color = (currentPlayer === "purple" ? "#a18cd1" : "#f6d365");
+// Tıklama
+function handleClick(x, y) {
+
+    if (selected) {
+
+        if (isValidMove(selected.x, selected.y, x, y) && !board[x][y]) {
+
+            let oldX = selected.x;
+            let oldY = selected.y;
+
+            // hamle yap
+            board[x][y] = currentPlayer;
+            board[oldX][oldY] = null;
+
+            // ❗ 4’lü kontrol
+            if (hasFour(currentPlayer)) {
+                board[oldX][oldY] = currentPlayer;
+                board[x][y] = null;
+
+                alert("Geçersiz hamle! (Aralıklı dahil 4 taş aynı doğrultuda olamaz)");
+                selected = null;
+                drawBoard();
+                return;
+            }
+
+            // taş alma
+            capture(x, y);
+
+            selected = null;
+            currentPlayer = currentPlayer === "purple" ? "orange" : "purple";
+
+            document.getElementById("turn").innerText =
+                "Sıra: " + (currentPlayer === "purple" ? "Mor" : "Turuncu");
+
+        } else {
+            selected = null;
+        }
+
+    } else {
+        if (board[x][y] === currentPlayer) {
+            selected = {x, y};
+        }
     }
+
+    drawBoard();
 }
 
-init();
+initBoard();
+drawBoard();
 </script>
+
 </body>
 </html>
