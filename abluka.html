@@ -89,6 +89,8 @@
   .btn-undo { background: #3498db; color: white; }
   .btn-reset { background: #e67e22; color: white; }
   .btn-download { background: #2ecc71; color: white; }
+  /* Yeni Eklenen Buton Stili */
+  .btn-home { background: #7f8c8d; color: white; }
 
   @media (max-width: 600px) {
     .header-container { gap: 10px; }
@@ -132,13 +134,13 @@
 </div>
 
 <div class="controls">
+  <button class="btn btn-home" onclick="window.location.href='index.html'">Ana Sayfa</button>
   <button class="btn btn-reset" onclick="init()">Sıfırla</button>
   <button id="undoBtn" class="btn btn-undo" onclick="undo()">Hamleyi Geri Al</button>
   <button id="downloadBtn" class="btn btn-download" onclick="downloadNotation()">Notasyonu İndir</button>
 </div>
 
 <script>
-// JavaScript fonksiyonları aynı kalmıştır
 const size = 7;
 const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 let board = [], currentPlayer = "black", phase = "move", gameOver = false, history = [];
